@@ -1,5 +1,6 @@
 const catchAsync = require('../utilities/catchasync')
 const bcrypt = require('bcryptjs')
+const {validationResult} = require('express-validator');
 
 exports.getUserDetails = (req,res,next)=>{
     const user = req.user
@@ -25,6 +26,10 @@ exports.updateUserDetails = catchAsync(async(req,res,next)=>{
    res.status(200).json({success:true,body:{title:'Response Success',user:updatedUser,msg:'User details updated.'}})
 })
 exports.updatedPassword = catchAsync(async(req,res,next)=>{
+    const errors = validationResult(req);
+    if(!errors.isEmpty()){
+        return res.status(422).json({success:false,body:{status:422,title:'Validation Error',data:errors}});
+    }
     const {oldPassword,password} = req.body
     const doMatch = await bcrypt.compare(oldPassword,req.user.password)
     if(!doMatch){

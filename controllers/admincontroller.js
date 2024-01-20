@@ -1,5 +1,5 @@
 const Category = require('../models/category')
-const User = require()
+const User = require('../models/user')
 const {validationResult} = require('express-validator')
 const catchAsync = require('../utilities/catchasync')
 const fs = require('fs')
@@ -86,6 +86,10 @@ exports.getAllUser = (req,res,next)=>{
   })  
 }
 exports.updatedPassword = catchAsync(async(req,res,next)=>{
+    const errors = validationResult(req);
+    if(!errors.isEmpty()){
+        return res.status(422).json({success:false,body:{status:422,title:'Validation Error',data:errors}});
+    }
     const {oldPassword,password} = req.body
     const doMatch = await bcrypt.compare(oldPassword,req.user.password)
     if(!doMatch){
