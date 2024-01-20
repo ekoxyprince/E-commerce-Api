@@ -1,5 +1,17 @@
 const {Router} = require('express')
 const router = Router()
+const controller = require('../controllers/usercontroller')
+const {auth} = require('../middlewares/auth')
+const {user} = require('../middlewares/role')
+const {imageUpload} = require('../middlewares/fileupload')
+const {password,oldPassword} = require('../middlewares/validation')
 
+router
+.route('/details')
+.get([auth,user],controller.getUserDetails)
+.patch([auth,user],[imageUpload.single('image'),controller.updateUserDetails])
+router
+.route('/password')
+.patch([auth,user],[oldPassword,password],controller.updatedPassword)
 
 module.exports = router

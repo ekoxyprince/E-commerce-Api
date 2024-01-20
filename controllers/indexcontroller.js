@@ -102,7 +102,9 @@ exports.createNewProduct = (req,res,next)=>{
         actualPrice:body.actualPrice,
       discount:body.discount
        },
-       userId:req.user._id
+       userId:req.user._id,
+       createdAt:new Date(Date.now()),
+       updatedAt:new Date(Date.now())
     })
     .then(product=>{
         return res.status(200).json({success:true,body:{status:200,title:'Response Success',data:{product,msg:'Single product inserted successfully'}}}) 
@@ -186,6 +188,7 @@ exports.createNewProduct = (req,res,next)=>{
         product.additionalDetails.services = body.services
         product.prices.actualPrice = body.actualPrice
         product.prices.discount = body.discount
+        product.updatedAt = new Date(Date.now())
         return product.save()
         .then(updatedProduct=>{
             return res.status(200).json({success:true,body:{status:200,title:'Response Success',data:{product:updatedProduct,msg:'Product was successfully updated'}}}) 

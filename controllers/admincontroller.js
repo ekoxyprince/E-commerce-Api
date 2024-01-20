@@ -1,5 +1,7 @@
 const Category = require('../models/category')
+const User = require()
 const {validationResult} = require('express-validator')
+const catchAsync = require('../utilities/catchasync')
 const fs = require('fs')
 
 exports.getAllCategories = (req,res,next)=>{
@@ -16,7 +18,7 @@ exports.getCategory = (req,res,next)=>{
     Category.findById(id)
     .then(category=>{
         if(!category){
-            return res.status(400).json({success:false,body:{status:400,title:'Verification Error',data:[{path:'id',msg:`No category found with id=${id} please verify id.`,value:id,location:'params',type:'route parameter'}]}})    
+            return res.status(400).json({success:false,body:{status:400,title:'Bad Request',data:[{path:'id',msg:`No category found with id=${id} please verify id.`,value:id,location:'params',type:'route parameter'}]}})    
         }
         return res.status(200).json({success:true,body:{status:200,title:'Response Success',data:{category,msg:'Single Category fetched successfully'}}}) 
     })
@@ -74,3 +76,23 @@ exports.deleteCategory = (req,res,next)=>{
         next(error)
     })
 }
+exports.getAllUser = (req,res,next)=>{
+  User.find({role:'user'})
+  .then(users=>{
+    res.status(200).json({success:true,body:{status:200,title:'Response Success',data:{users,msg:'Users fetched successfully.'}}})  
+  })
+  .catch(error=>{
+    next(error)
+  })  
+}
+exports.updatedPassword = catchAsync(async(req,res,next)=>{
+    const {oldPassword,password} = req.body
+    const doMatch = await bcrypt.compare(oldPassword,req.user.password)
+    if(!doMatch){
+        return res.status(401).json({success:false,body:{title:'Unauthorized Request',path:'password',value:oldPassword,location:'body'}})
+    }
+    const hashedPassword = await bcrypt.hash(password,12)
+    req.user.password = hashedPassword
+    const updatedUser = await req.user.save()
+    res.status(200).json({success:true,body:{title:'Response Success',msg:'Password updated successfully.',user:updatedUser}}) 
+})

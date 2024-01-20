@@ -18,7 +18,15 @@ const userSchema = new Schema({
       required:true
     },
     resetToken:String,
-    resetTokenExpires:Date
+    resetTokenExpires:Date,
+    location:{
+      state:String,
+      city:String,
+      address:String,
+      zipcode:Number
+    },
+    phone:String,
+    image:String
 })
 
 module.exports = model('User',userSchema)

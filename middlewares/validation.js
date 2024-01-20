@@ -35,4 +35,11 @@ body('category_name')
 exports.catType = 
 body('category_type')
 .notEmpty().withMessage('Category type field is required');
+exports.oldPassword = 
+     body('oldPassword')
+    .notEmpty().withMessage('The password field requires a value')
+    .isLength({min:8}).withMessage('password must be at least 8 characters')
+    .matches(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
+    .withMessage('Password must contain atleast one lowercase, one uppercase, one digit and one special character')
+    .trim();
 

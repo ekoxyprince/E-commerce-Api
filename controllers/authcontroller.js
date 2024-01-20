@@ -37,12 +37,12 @@ exports.signin = (req,res,next)=>{
   User.findOne({email:email})
   .then(user=>{
    if(!user){
-    return res.status(400).json({success:false,body:{status:400,title:'Authentication Error',data:[{path:'email',msg:'Incorrect email address',value:email,location:'body',type:'field'}]}})
+    return res.status(400).json({success:false,body:{status:401,title:'Authentication Error',data:[{path:'email',msg:'Incorrect email address',value:email,location:'body',type:'field'}]}})
    }
    return bcrypt.compare(password,user.password)
    .then(doMatch=>{
     if(!doMatch){
-    return res.status(400).json({success:false,body:{status:400,title:'Authentication Error',data:[{path:'password',msg:'Incorrect paswsord',value:password,location:'body',type:'field'}]}})  
+    return res.status(400).json({success:false,body:{status:401,title:'Authentication Error',data:[{path:'password',msg:'Incorrect paswsord',value:password,location:'body',type:'field'}]}})  
     }
     const token = jwt.sign({_id:user._id},jwt_secret,{expiresIn:jwt_expires})
     //Email function call should be here
@@ -64,7 +64,7 @@ const resetTokenExpires = Date.now() + 3600000
 User.findOne({email:email})
 .then(user=>{
   if(!user){
-    return res.status(400).json({success:false,body:{status:400,title:'Authentication Error',data:[{path:'email',msg:'Email is not linked to any account',value:email,location:'body',type:'field'}]}}) 
+    return res.status(400).json({success:false,body:{status:401,title:'Unauthorized Request',data:[{path:'email',msg:'Email is not linked to any account',value:email,location:'body',type:'field'}]}}) 
   }
   user.resetToken = resetToken
   user.resetTokenExpires = resetTokenExpires
@@ -87,7 +87,7 @@ if(!errors.isEmpty()){
   User.findOne({resetToken:resetToken,resetTokenExpires:{$gt:Date.now()}})
   .then(user=>{
     if(!user){
-      return res.status(400).json({success:false,body:{status:400,title:'Authentication Error',data:[{path:'resetToken',msg:'Invalid token session',value:email,location:'body',type:'field'}]}})  
+      return res.status(400).json({success:false,body:{status:401,title:'Unauthorized Request',data:[{path:'resetToken',msg:'Invalid token session',value:email,location:'body',type:'field'}]}})  
     }
     return bcrypt.hash(password,12)
     .then(hashedPassword=>{
