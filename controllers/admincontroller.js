@@ -3,6 +3,8 @@ const User = require('../models/user')
 const {validationResult} = require('express-validator')
 const catchAsync = require('../utilities/catchasync')
 const fs = require('fs')
+const Payment = require('../models/payments')
+const Order = require('../models/order')
 
 exports.getAllCategories = (req,res,next)=>{
     Category.find()
@@ -64,6 +66,7 @@ exports.updateCategory = (req,res,next)=>{
     .then(category=>{
         return res.status(200).json({success:true,body:{status:200,title:'Response Success',data:{category,msg:'Single Category updated successfully'}}})   
     })
+    .catch(error=>next(error))
 }
 exports.deleteCategory = (req,res,next)=>{
     const {id} = req.params
@@ -100,3 +103,77 @@ exports.updatedPassword = catchAsync(async(req,res,next)=>{
     const updatedUser = await req.user.save()
     res.status(200).json({success:true,body:{title:'Response Success',msg:'Password updated successfully.',user:updatedUser}}) 
 })
+exports.fetchPayments = (req,res,next)=>{
+    Payment.find()
+    .populate('orderId')
+    .then(payments=>{
+        res.status(200).json({success:true,body:{title:'Response Success',status:200,data:{msg:'Payments fetched successfully.',payments}}})   
+    })
+    .catch(error=>next(error))
+}
+exports.fetchSinglePayment = (req,res,next)=>{
+    const {id} = req.params
+    Payment.findOne({_id:id})
+    .populate('orderId')
+    .then(payment=>{
+        if(!payment){
+            return res.status(401).json({success:false,body:{title:'Unauthorized Request',status:401,data:{path:'id',value:id,location:'params',msg:'No payment fetched!'}}})
+        }
+        res.status(200).json({success:true,body:{title:'Response Success',status:200,data:{msg:'Payment fetched successfully.',payment}}})
+    }) 
+    .catch(error=>next(error))
+}
+exports.fetchAllOrders = (req,res,next)=>{
+    Order.find()
+    .populate('items.product')
+    .then(orders=>{
+        res.status(200).json({success:true,body:{title:'Response Success',status:200,data:{msg:'Orders fetched successfully.',orders}}})   
+    })
+    .catch(error=>next(error))
+}
+exports.fetchSingleOrder = (req,res,next)=>{
+    const {id} = req.params
+    Order.findOne({_id:id})
+    .populate('items.product')
+    .then(order=>{
+        if(!order){
+            return res.status(400).json({success:false,body:{title:'Bad Request',status:400,data:{path:'id',value:id,location:'params',msg:'No order fetched!'}}})
+        }
+        res.status(200).json({success:true,body:{title:'Response Success',status:200,data:{msg:'Order fetched successfully.',order}}})
+    })
+    .catch(error=>next(error))
+}
+exports.searchByOrderNo = (req,res,next)=>{
+    const {q} = req.query
+    Order.find({orderNo:{$regex:new RegExp(q),$options:'i'}})
+    .populate('items.product')
+    .then(orders=>{
+        res.status(200).json({success:true,body:{title:'Response Success',status:200,data:{msg:'Orders fetched successfully.',orders}}})   
+    })
+    .catch(error=>next(error))
+}
+exports.searchByRefNo = (req,res,next)=>{
+    const {q} = req.query
+    Payment.find({reference:{$regex:new RegExp(q),$options:'i'}})
+    .populate('orderId')
+    .then(payments=>{
+        res.status(200).json({success:true,body:{title:'Response Success',status:200,data:{msg:'Payments fetched successfully.',payments}}})   
+    })
+    .catch(error=>next(error))
+}
+exports.updateUserOrder = (req,res,next)=>{
+    const {id} = req.params
+    const {action} = req.body
+    Order.findOne({_id:id})
+    .then(order=>{
+        if(!order){
+            return res.status(400).json({success:false,body:{title:'Bad Request',status:400,data:{path:'id',value:id,location:'params',msg:'No order fetched!'}}})
+        }
+        order.status = action
+        return order.save()
+        .then(updatedOrder=>{
+            res.status(200).json({success:true,body:{title:'Response Success',status:200,data:{msg:'Order fetched successfully.',order:updatedOrder}}})
+        })
+    })
+    .catch(error=>next(error))
+}

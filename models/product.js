@@ -47,6 +47,7 @@ const productSchema = new Schema({
     prices:{
      actualPrice:String,
      discount:String,
+     shippingFee:String,
     },
     reviews:[
         {

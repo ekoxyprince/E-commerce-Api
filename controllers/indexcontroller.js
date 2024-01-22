@@ -3,6 +3,10 @@ const Product = require('../models/product')
 const {server} = require('../config')
 const fs = require('fs')
 const tryCatch = require('../utilities/catchasync')
+const PaymentService = require('../services/payment')
+const paymentInstance = new PaymentService()
+const {validationResult} = require('express-validator')
+const Order = require('../models/order')
 
 
 
@@ -171,7 +175,7 @@ exports.createNewProduct = (req,res,next)=>{
     for(let image of images) {
        imagesArr.push({url:`${server}`+`${image.destination}${image.filename}`.slice(8)})
     }
-    Product.findById(id)
+    Product.findOne({_id:id,userId:req.user._id})
     .then(product=>{
         if(!product){
             return res.status(400).json({success:false,body:{status:400,title:'Verification Error',data:[{path:'id',msg:`No product found with id associated with this user please verify id.`,value:prodId,location:'params',type:'route parameter'}]}})    
@@ -225,7 +229,7 @@ exports.addTocart = tryCatch(async(req,res,next)=>{
        cart[existingItemIndex]['quantity'] = parseInt(cart[existingItemIndex]['quantity'])+1
        cart[existingItemIndex]['total'] = Number(parseInt(cart[existingItemIndex]['quantity'])*parseFloat(cart[existingItemIndex]['product']['price']))
     }else{
-        const cartItem = {product:{productName:product.productName,imageUrl:product.images[0].url,id:product._id,price:product.prices.actualPrice-product.prices.discount},quantity:1,total:product.prices.actualPrice}
+        const cartItem = {product:{productName:product.productName,imageUrl:product.images[0].url,id:product._id,price:product.prices.actualPrice-product.prices.discount},quantity:1,total:product.prices.actualPrice-product.prices.discount,shipping:product.prices.shippingFee||0}
         cart.push(cartItem)
     }
    }
@@ -246,4 +250,41 @@ exports.deleteFromCart = (req,res,next)=>{
    }
    res.status(200).json({success:true,body:{status:200,title:'Response Success',data:{cart:req.session['cart'],msg:'added to cart'}}}) 
 }
+exports.getCurrentUserOrder = (req,res,next)=>{
+    if(req.session['cart']&&req.session['cart'].length>0){
+        res.status(200).json({success:true,body:{title:'Response Success',status:200,data:{user:req.user,cart:req.session['cart']}}})
+    }else{
+        return res.status(400).json({success:false,body:{title:'Bad Request',status:400,data:{msg:'Invalid cart details',path:'cart',value:null,location:'session'}}})
+    }
+}
+exports.startPayment = tryCatch(async(req,res,next)=>{
+    const {id} = req.body
+    const order = await Order.findById(id)
+    if(!order){
+        return res.status(400).json({success:false,body:{status:400,title:'Bad Request',data:{msg:'No order found!',value:id,path:'id',location:'body'}}})
+    }
+     const response = await paymentInstance.startPayment({
+        email:req.user.email,
+        full_name:req.user.fullname || `User-${req.user._id}`,
+        amount:order.total,
+        orderId:id
+     })
+     res.status(201).json({success:true,body:{title:'Payment Started',status:201,data:response}})
+})
+exports.createPayment = tryCatch(async(req,res,next)=>{
+    const response = await paymentInstance.createPayment(req.query)
+    const newStatus = response.status === 'success'?'completed':'pending'
+    const order = await Order.findOne({_id:response.orderId})
+    order.status = newStatus
+    const newOrder = await order.save()
+    res.status(201).json({success:true,body:{title:'Payment Created',status:201,data:{payment:response,order:newOrder}}})
+})
+exports.getPayment = tryCatch(async(req,res,next)=>{
+    const errors = validationResult(req)
+    if(!errors.isEmpty()){
+        return res.status(422).json({success:false,body:{status:422,title:'Validation Error',data:errors}});
+    }
+    const response = await paymentInstance.paymentReceipt(req.query)
+    res.status(201).json({success:true,body:{title:'Payment Details',status:201,data:response}})
+})
 

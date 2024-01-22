@@ -21,6 +21,24 @@ router
 router
 .route('/password')
 .patch([auth,admin],[oldPassword,password],controller.updateCategory)
-
+router
+.route('/payments')
+.get([auth,admin],controller.fetchPayments)
+router
+.route('/payment/:id')
+.get([auth,admin],controller.fetchSinglePayment)
+router
+.route('/orders')
+.get([auth,admin],controller.fetchAllOrders)
+router
+.route('/order/:id')
+.get([auth,admin],controller.fetchSingleOrder)
+.patch([auth,admin],controller.updateUserOrder)
+router
+.route('/search_orders')
+.get([auth,admin],controller.searchByOrderNo)
+router
+.route('/search_payments')
+.get([auth,admin],controller.searchByRefNo)
 
 module.exports = router

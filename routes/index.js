@@ -31,12 +31,22 @@ router
 .route('/search')
 .get(controller.searchProduct)
 router
+.route('/related_products')
+.get(controller.fetchRelatedProducts)
+router
 .route('/cart')
 .get(controller.fetchCart)
 .post(controller.addTocart)
 .delete(controller.deleteFromCart)
 router
-.route('/related_products')
-.get(controller.fetchRelatedProducts)
+.route('/order')
+.get([auth],controller.getCurrentUserOrder)
+router
+.route('/payment')
+.get([auth],controller.createPayment)
+.post([auth],controller.startPayment)
+router
+.route('/payment_details')
+.get([auth],controller.getPayment)
 
 module.exports = router
