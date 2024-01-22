@@ -22,6 +22,9 @@ router
 router
 .route('/order/:id')
 .get([auth,user],controller.getSingleOrder)
+router
+.route('/products')
+.get([auth,user],controller.fetchUserProducts)
 
 
 module.exports = router

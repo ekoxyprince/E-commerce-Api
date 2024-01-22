@@ -2,6 +2,7 @@ const catchAsync = require('../utilities/catchasync')
 const bcrypt = require('bcryptjs')
 const {validationResult} = require('express-validator');
 const Order = require('../models/order')
+const Product = require('../models/product')
 
 exports.checkOut = (req,res,next)=>{
    const {fullname,address} = req.body
@@ -95,4 +96,11 @@ exports.getSingleOrder = (req,res,next)=>{
         }
         res.status(200).json({success:true,body:{title:'Response Success',status:200,data:{msg:'Order fetched successfully.',order}}})
     })
+}
+exports.fetchUserProducts = (req,res,next)=>{
+    Product.find({userId:req.user._id})
+    .then(products=>{
+     res.status(200).json({success:true,body:{title:'Response successful',status:200,data:{products,msg:'User products fetched!'}}})
+    })
+    .catch(error=>next(error))
 }
