@@ -154,10 +154,9 @@ exports.createNewProduct = (req,res,next)=>{
     Product.findOneAndDelete({_id:id,userId:req.user._id})
     .then(product=>{
         if(!product){
-            return res.status(400).json({success:false,body:{status:400,title:'Verification Error',data:[{path:'id',msg:`No product found with id associated with this user please verify id.`,value:prodId,location:'params',type:'route parameter'}]}})    
+            return res.status(400).json({success:false,body:{status:400,title:'Verification Error',data:[{path:'id',msg:`No product found with id associated with this user please verify id.`,value:id,location:'params',type:'route parameter'}]}})    
         }
         const prodImages = product.images
-        console.log(prodImages)
         for(let image of prodImages){
             fs.unlinkSync(image.url.replace(server,'./public'))
         }
@@ -178,7 +177,7 @@ exports.createNewProduct = (req,res,next)=>{
     Product.findOne({_id:id,userId:req.user._id})
     .then(product=>{
         if(!product){
-            return res.status(400).json({success:false,body:{status:400,title:'Verification Error',data:[{path:'id',msg:`No product found with id associated with this user please verify id.`,value:prodId,location:'params',type:'route parameter'}]}})    
+            return res.status(400).json({success:false,body:{status:400,title:'Verification Error',data:[{path:'id',msg:`No product found with id associated with this user please verify id.`,value:id,location:'params',type:'route parameter'}]}})    
         } 
         product.productName = body.productName
         product.header = body.header

@@ -40,5 +40,8 @@ router
 router
 .route('/search_payments')
 .get([auth,admin],controller.searchByRefNo)
+router
+.route('/product/:id')
+.delete([auth,admin],controller.deleteProduct)
 
 module.exports = router

@@ -26,5 +26,4 @@ router
 .route('/products')
 .get([auth,user],controller.fetchUserProducts)
 
-
 module.exports = router

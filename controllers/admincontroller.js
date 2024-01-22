@@ -177,3 +177,20 @@ exports.updateUserOrder = (req,res,next)=>{
     })
     .catch(error=>next(error))
 }
+exports.deleteProduct = (req,res,next)=>{
+    const {id} = req.params
+    Product.findOneAndDelete({_id:id})
+    .then(product=>{
+        if(!product){
+            return res.status(400).json({success:false,body:{status:400,title:'Verification Error',data:[{path:'id',msg:`No product found with id associated with this user please verify id.`,value:id,location:'params',type:'route parameter'}]}})    
+        }
+        const prodImages = product.images
+        for(let image of prodImages){
+            fs.unlinkSync(image.url.replace(server,'./public'))
+        }
+            return res.status(200).json({success:true,body:{status:200,title:'Response Success',data:{product,msg:'Product was successfully removed'}}}) 
+    })
+    .catch(error=>{
+        next(error)
+    })
+}
