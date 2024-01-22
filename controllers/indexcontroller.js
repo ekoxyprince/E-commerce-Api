@@ -286,4 +286,7 @@ exports.getPayment = tryCatch(async(req,res,next)=>{
     const response = await paymentInstance.paymentReceipt(req.query)
     res.status(201).json({success:true,body:{title:'Payment Details',status:201,data:response}})
 })
+exports.filterProducts = tryCatch((req,res,next)=>{
+    
+})
 

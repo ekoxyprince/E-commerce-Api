@@ -48,5 +48,8 @@ router
 router
 .route('/payment_details')
 .get([auth],controller.getPayment)
+router
+.route('/filter')
+.get([auth],controller.filterProducts)
 
 module.exports = router
