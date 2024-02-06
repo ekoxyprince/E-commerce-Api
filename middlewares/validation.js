@@ -42,4 +42,13 @@ exports.oldPassword =
     .matches(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
     .withMessage('Password must contain atleast one lowercase, one uppercase, one digit and one special character')
     .trim();
-
+exports.fullname =
+body('fullname')
+.notEmpty().withMessage('Kindly enter your username')
+.custom((value,{req})=>{
+    if(/[0-9\d@$!%*?&]/.test(value)){
+        throw new Error("Invalid name. kindly ensure the name provided is valid must contain only alphabets") 
+      }else{
+        return !0
+      }
+})

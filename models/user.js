@@ -1,4 +1,5 @@
 const {Schema,model} = require('mongoose')
+const mongoose = require('mongoose')
 
 const userSchema = new Schema({
     username:String,
@@ -17,6 +18,10 @@ const userSchema = new Schema({
       type:String,
       required:true
     },
+    status:{
+      type:String,
+      required:true
+  },
     resetToken:String,
     resetTokenExpires:Date,
     location:{
@@ -26,7 +31,10 @@ const userSchema = new Schema({
       zipcode:Number
     },
     phone:String,
-    image:String
+    image:String,
+    registeredAs:String,
+    merchantCategory:String,
+    category:String
 })
 
 module.exports = model('User',userSchema)

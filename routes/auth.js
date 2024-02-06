@@ -1,7 +1,7 @@
 const {Router} = require('express');
 const router = Router();
 const controller = require('../controllers/authcontroller');
-const {user,password,email,resetToken} = require('../middlewares/validation')
+const {user,password,email,resetToken,fullname} = require('../middlewares/validation')
 const auth = require('../middlewares/auth')
 const passport = require('../config/passport')
 
@@ -33,5 +33,9 @@ router
 router
 .route('/facebook/callback')
 .post(auth.facebookOauth)
+router
+.route('/waitlist')
+.post([user,fullname,password],controller.addWaitlist)
+.patch(controller.updateWaitlistDetails)
 
 module.exports = router

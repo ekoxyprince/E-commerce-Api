@@ -9,7 +9,6 @@ const {validationResult} = require('express-validator')
 const Order = require('../models/order')
 
 
-
 exports.getCategoriesByType = (req,res,next)=>{
     const {type} = req.params
     Category.find({categoryType:type})
@@ -284,7 +283,7 @@ exports.getPayment = tryCatch(async(req,res,next)=>{
         return res.status(422).json({success:false,body:{status:422,title:'Validation Error',data:errors}});
     }
     const response = await paymentInstance.paymentReceipt(req.query)
-    res.status(201).json({success:true,body:{title:'Payment Details',status:201,data:response}})
+    res.status(200).json({success:true,body:{title:'Payment Details',status:200,data:response}})
 })
 exports.filterProducts = tryCatch((req,res,next)=>{
     

@@ -16,7 +16,8 @@ exports.signup = (req,res,next)=>{
       return User.create({
         email:email,
         password:hashedPassword,
-        role:'user'
+        role:'user',
+        status:'verified_user'
       })
     })
     .then(createdUser=>{
@@ -64,7 +65,7 @@ const resetTokenExpires = Date.now() + 3600000
 User.findOne({email:email})
 .then(user=>{
   if(!user){
-    return res.status(400).json({success:false,body:{status:401,title:'Unauthorized Request',data:[{path:'email',msg:'Email is not linked to any account',value:email,location:'body',type:'field'}]}}) 
+    return res.status(401).json({success:false,body:{status:401,title:'Unauthorized Request',data:[{path:'email',msg:'Email is not linked to any account',value:email,location:'body',type:'field'}]}}) 
   }
   user.resetToken = resetToken
   user.resetTokenExpires = resetTokenExpires
@@ -104,4 +105,47 @@ if(!errors.isEmpty()){
   .then(err=>{
     next(err)
   })
+}
+exports.addWaitlist = (req,res,next)=>{
+  const errors = validationResult(req);
+  if(!errors.isEmpty()){
+    return res.status(422).json({success:false,body:{title:'Validation Error',status:422,data:errors}})
+  }
+  const body = req.body
+  bcrypt.hash(body.password,12)
+  .then(hashedPassword=>{
+    return User.create({
+      email:body.email,
+      password:hashedPassword,
+      username:body.fullname,
+      role:'user',
+      status:'waitlist_user',
+      registeredAs:body.registeredAs
+    })
+  })
+  .then(createdUser=>{
+    const token = jwt.sign({_id:createdUser._id},jwt_secret,{expiresIn:jwt_expires})
+    //Email function call should be here
+    res.status(200).json({success:true,body:{status:200,title:'Response Success',data:{...createdUser,accessToken:token,msg:'Registration was successful'}}})
+ })
+ .catch(error=>{
+     next(error)
+ })
+
+}
+exports.updateWaitlistDetails = (req,res,next)=>{
+const {id,merchantCategory,category} = req.body
+User.findById(id)
+.then(user=>{
+  if(!user){
+    return res.status(401).json({success:false,body:{title:'Unauthorized Request', status:401,data:[{value:id,path:'id',location:'body',type:'field',msg:'No user found!'}]}})
+  }
+  user.merchantCategory = merchantCategory
+  user.category = category
+  return user.save()
+  .then(user=>{
+    res.status(200).json({success:true,body:{title:'Response Success',status:200,data:user}})
+  })
+})
+.catch(error=>next(error))
 }
