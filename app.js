@@ -38,6 +38,7 @@ app.use(helmet())
 app.use(logger('dev'))
 app.use(cors({origin:allowedOrigin,
 optionsSuccessStatus:200}))
+
 app.use(session({
     resave:false,
     saveUninitialized:false,

@@ -8,22 +8,22 @@ const crypto = require('crypto')
 exports.signup = (req,res,next)=>{
     const errors = validationResult(req);
     if(!errors.isEmpty()){
-        return res.status(422).json({success:false,body:{status:422,title:'Validation Error',data:errors}});
+        return res.status(422).json({success:false,code:422,status:'error',data:errors.array()[0]});
     }
-    const {email,password} = req.body
+    const {email,password,role} = req.body
     bcrypt.hash(password,12)
     .then(hashedPassword=>{
       return User.create({
         email:email,
         password:hashedPassword,
-        role:'user',
+        role,
         status:'verified_user'
       })
     })
     .then(createdUser=>{
        const token = jwt.sign({_id:createdUser._id},jwt_secret,{expiresIn:jwt_expires})
        //Email function call should be here
-       res.status(200).json({success:true,body:{status:200,title:'Response Success',data:{...createdUser,accessToken:token,msg:'Registration was successful'}}})
+       res.status(200).json({success:true,code:200,status:'success',data:{...createdUser['_doc'],accessToken:token,msg:'Registration was successful'}})
     })
     .catch(error=>{
         next(error)
@@ -32,22 +32,22 @@ exports.signup = (req,res,next)=>{
 exports.signin = (req,res,next)=>{
   const errors = validationResult(req)
   if(!errors.isEmpty()){
-    return res.status(422).json({success:false,body:{status:422,title:'Validation Error',data:errors}})
+    return res.status(422).json({success:false,code:422,status:'error',data:errors.array()[0]})
   }
   const {email,password} = req.body
   User.findOne({email:email})
   .then(user=>{
    if(!user){
-    return res.status(400).json({success:false,body:{status:401,title:'Authentication Error',data:[{path:'email',msg:'Incorrect email address',value:email,location:'body',type:'field'}]}})
+    return res.status(400).json({success:false,code:401,status:'error',data:{path:'email',msg:'Incorrect email address',value:email,location:'body',type:'field'}})
    }
    return bcrypt.compare(password,user.password)
    .then(doMatch=>{
     if(!doMatch){
-    return res.status(400).json({success:false,body:{status:401,title:'Authentication Error',data:[{path:'password',msg:'Incorrect paswsord',value:password,location:'body',type:'field'}]}})  
+    return res.status(400).json({success:false,code:401,status:'error',data:{path:'password',msg:'Incorrect paswsord',value:password,location:'body',type:'field'}})  
     }
     const token = jwt.sign({_id:user._id},jwt_secret,{expiresIn:jwt_expires})
     //Email function call should be here
-    res.status(200).json({success:true,body:{status:200,title:'Response Success',data:{...user,accessToken:token,msg:'User Logged in successfully'}}})
+    res.status(200).json({success:true,code:200,status:'success',data:{...user['_doc'],accessToken:token,msg:'User Logged in successfully'}})
    })
   })
   .catch(err=>{
@@ -57,7 +57,7 @@ exports.signin = (req,res,next)=>{
 exports.forgotPassword = (req,res,next)=>{
 const errors = validationResult(req)
 if(!errors.isEmpty()){
-  return res.status(422).json({success:false,body:{status:422,title:'Validation Error',data:errors}})
+  return res.status(422).json({success:false,code:422,status:'error',data:errors.array()[0]})
 }
 const {email} = req.body
 const resetToken = crypto.randomBytes(32).toString('hex')
@@ -65,14 +65,14 @@ const resetTokenExpires = Date.now() + 3600000
 User.findOne({email:email})
 .then(user=>{
   if(!user){
-    return res.status(401).json({success:false,body:{status:401,title:'Unauthorized Request',data:[{path:'email',msg:'Email is not linked to any account',value:email,location:'body',type:'field'}]}}) 
+    return res.status(401).json({success:false,code:401,status:'Unauthorized Request',data:{path:'email',msg:'Email is not linked to any account',value:email,location:'body',type:'field'}}) 
   }
   user.resetToken = resetToken
   user.resetTokenExpires = resetTokenExpires
   return user.save()
   .then(saved=>{
     //Email function call should be here
-    res.status(200).json({success:true,body:{status:200,title:'Response Success',data:{...saved,msg:'Reset link has been successfully sent'}}}) 
+    res.status(200).json({success:true,code:200,status:'success',data:{...saved,msg:'Reset link has been successfully sent'}}) 
   })
 })
 .catch(err=>{
@@ -82,13 +82,13 @@ User.findOne({email:email})
 exports.resetPassword = (req,res,next)=>{
   const errors = validationResult(req)
 if(!errors.isEmpty()){
-  return res.status(422).json({success:false,body:{status:422,title:'Validation Error',data:errors}})
+  return res.status(422).json({success:false,code:422,status:'error',data:errors.array()[0]})
 }
   const {resetToken,password} = req.body
   User.findOne({resetToken:resetToken,resetTokenExpires:{$gt:Date.now()}})
   .then(user=>{
     if(!user){
-      return res.status(400).json({success:false,body:{status:401,title:'Unauthorized Request',data:[{path:'resetToken',msg:'Invalid token session',value:email,location:'body',type:'field'}]}})  
+      return res.status(400).json({success:false,code:401,status:'error',data:{path:'resetToken',msg:'Invalid token session',value:email,location:'body',type:'field'}})  
     }
     return bcrypt.hash(password,12)
     .then(hashedPassword=>{
@@ -99,7 +99,7 @@ if(!errors.isEmpty()){
     })
     .then(saved=>{
     //Email function call should be here
-    res.status(200).json({success:true,body:{status:200,title:'Response Success',data:{...saved,msg:'Password reset was successful'}}}) 
+    res.status(200).json({success:true,code:200,status:'success',data:{...saved,msg:'Password reset was successful'}}) 
     })
   })
   .then(err=>{
@@ -109,7 +109,7 @@ if(!errors.isEmpty()){
 exports.addWaitlist = (req,res,next)=>{
   const errors = validationResult(req);
   if(!errors.isEmpty()){
-    return res.status(422).json({success:false,body:{title:'Validation Error',status:422,data:errors}})
+    return res.status(422).json({success:false,code:422,status:'error',data:errors.array()[0]})
   }
   const body = req.body
   bcrypt.hash(body.password,12)
@@ -126,7 +126,7 @@ exports.addWaitlist = (req,res,next)=>{
   .then(createdUser=>{
     const token = jwt.sign({_id:createdUser._id},jwt_secret,{expiresIn:jwt_expires})
     //Email function call should be here
-    res.status(200).json({success:true,body:{status:200,title:'Response Success',data:{...createdUser,accessToken:token,msg:'Registration was successful'}}})
+    res.status(200).json({success:true,code:201,status:'success',data:{...createdUser,accessToken:token,msg:'Registration was successful'}})
  })
  .catch(error=>{
      next(error)
@@ -138,13 +138,13 @@ const {id,merchantCategory,category} = req.body
 User.findById(id)
 .then(user=>{
   if(!user){
-    return res.status(401).json({success:false,body:{title:'Unauthorized Request', status:401,data:[{value:id,path:'id',location:'body',type:'field',msg:'No user found!'}]}})
+    return res.status(401).json({success:false,body:{status:'Unauthorized Request', status:401,data:[{value:id,path:'id',location:'body',type:'field',msg:'No user found!'}]}})
   }
   user.merchantCategory = merchantCategory
   user.category = category
   return user.save()
   .then(user=>{
-    res.status(200).json({success:true,body:{title:'Response Success',status:200,data:user}})
+    res.status(200).json({success:true,body:{status:'success',status:200,data:user}})
   })
 })
 .catch(error=>next(error))

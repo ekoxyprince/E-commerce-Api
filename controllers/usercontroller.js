@@ -29,25 +29,23 @@ exports.checkOut = (req,res,next)=>{
    }).then(order=>{
     //mail function 
     req.session['cart'] = undefined
-    res.status(200).json({success:true,body:{title:'Response Success',status:200,data:{msg:'Order Successfully created',order}}})
+    res.status(200).json({success:true,status:'success',code:201,data:{msg:'Order Successfully created',order}})
    })
    .catch(error=>(next(error)))
    }else{
-    return res.status(400).json({success:false,body:{title:'Bad Request',status:400,data:{msg:'Invalid cart details',path:'cart',value:null,location:'session'}}})
+    return res.status(400).json({success:false,status:'error',code:400,data:{msg:'Invalid cart details',path:'cart',value:null,location:'session'}})
 }
 }
 exports.getUserDetails = (req,res,next)=>{
     const user = req.user
     res.status(200).json({
         success:true,
-        body:{
-            title:'Response Success',
-            status:200,
+        status:'success',
+            code:200,
             data:{
                 user,
                 msg:'User found and fetched.'
             }
-        }
     })
 }
 exports.updateUserDetails = catchAsync(async(req,res,next)=>{
@@ -60,28 +58,28 @@ exports.updateUserDetails = catchAsync(async(req,res,next)=>{
    req.user.phone = body.phone || req.user.phone
    req.user.image = typeof req.file === 'undefined'?`${destination}${filename}`.slice(8):req.user.image
    const updatedUser = await req.user.save()
-   res.status(200).json({success:true,body:{title:'Response Success',status:200,data:{user:updatedUser,msg:'User details updated.'}}})
+   res.status(200).json({success:true,status:'success',code:200,data:{user:updatedUser,msg:'User details updated.'}})
 })
 exports.updatedPassword = catchAsync(async(req,res,next)=>{
     const errors = validationResult(req);
     if(!errors.isEmpty()){
-        return res.status(422).json({success:false,body:{status:422,title:'Validation Error',data:errors}});
+        return res.status(422).json({success:false,code:422,status:'error',data:errors.array()[0]});
     }
     const {oldPassword,password} = req.body
     const doMatch = await bcrypt.compare(oldPassword,req.user.password)
     if(!doMatch){
-        return res.status(401).json({success:false,body:{title:'Unauthorized Request',status:401,data:{path:'password',value:oldPassword,location:'body',msg:'Incorrect current password'}}})
+        return res.status(401).json({success:false,status:'Unauthorized Request',status:401,data:{path:'password',value:oldPassword,location:'body',msg:'Incorrect current password'}})
     }
     const hashedPassword = await bcrypt.hash(password,12)
     req.user.password = hashedPassword
     const updatedUser = await req.user.save()
-    res.status(200).json({success:true,body:{title:'Response Success',status:200,data:{msg:'Password updated successfully.',user:updatedUser}}}) 
+    res.status(200).json({success:true,status:'success',code:200,data:{msg:'Password updated successfully.',user:updatedUser}}) 
 })
 exports.getUserOrders = (req,res,next)=>{
     Order.find({userId:req.user._id})
     .populate('items.product')
     .then(orders=>{
-        res.status(200).json({success:true,body:{title:'Response Success',status:200,data:{msg:'Orders fetched successfully.',orders}}})   
+        res.status(200).json({success:true,status:'success',code:200,data:{msg:'Orders fetched successfully.',orders}})   
     })
     .catch(error=>next(error))
 }
@@ -92,15 +90,15 @@ exports.getSingleOrder = (req,res,next)=>{
     .populate('items.product')
     .then(order=>{
         if(!order){
-            return res.status(401).json({success:false,body:{title:'Unauthorized Request',status:401,data:{path:'id',value:id,location:'params',msg:'No order fetched!'}}})
+            return res.status(401).json({success:false,status:'Unauthorized Request',status:401,data:{path:'id',value:id,location:'params',msg:'No order fetched!'}})
         }
-        res.status(200).json({success:true,body:{title:'Response Success',status:200,data:{msg:'Order fetched successfully.',order}}})
+        res.status(200).json({success:true,status:'success',code:200,data:{msg:'Order fetched successfully.',order}})
     })
 }
 exports.fetchUserProducts = (req,res,next)=>{
     Product.find({userId:req.user._id})
     .then(products=>{
-     res.status(200).json({success:true,body:{title:'Response successful',status:200,data:{products,msg:'User products fetched!'}}})
+     res.status(200).json({success:true,status:'successful',code:200,data:{products,msg:'User products fetched!'}})
     })
     .catch(error=>next(error))
 }

@@ -1,6 +1,14 @@
 
 exports.user = (req,res,next)=>{
-    if(req.user.role !== "user" || req.user.status !== 'verified_user'){
+const users = ['seller','buyer']
+    if(users.findIndex(i=>i==req.user.role)<0){
+        return res.status(403).json({success:false,body:{status:401,title:'Unauthorized Request',data:{location:'database',path:'user',field:'role',msg:"User is not authorized"}}})
+    }
+    next()
+}
+exports.merchant = (req,res,next)=>{
+    const merchants = ['seller','admin']
+    if(merchants.findIndex(i=>i==req.user.role)<0){
         return res.status(403).json({success:false,body:{status:401,title:'Unauthorized Request',data:{location:'database',path:'user',field:'role',msg:"User is not authorized"}}})
     }
     next()

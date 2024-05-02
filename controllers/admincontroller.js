@@ -9,7 +9,7 @@ const Order = require('../models/order')
 exports.getAllCategories = (req,res,next)=>{
     Category.find()
     .then(categories=>{
-        res.status(200).json({success:true,body:{status:200,title:'Response Success',data:{categories,msg:'Categories fetched successfully'}}}) 
+        res.status(200).json({success:true,code:200,status:'success',data:categories})
     })
     .catch(error=>{
         next(error)
@@ -20,9 +20,9 @@ exports.getCategory = (req,res,next)=>{
     Category.findById(id)
     .then(category=>{
         if(!category){
-            return res.status(400).json({success:false,body:{status:400,title:'Bad Request',data:[{path:'id',msg:`No category found with id=${id} please verify id.`,value:id,location:'params',type:'route parameter'}]}})    
+            return res.status(400).json({success:false,msg:'No category found!', code:400,status:'error',data:null})    
         }
-        return res.status(200).json({success:true,body:{status:200,title:'Response Success',data:{category,msg:'Single Category fetched successfully'}}}) 
+        return res.status(200).json({success:true,code:200, status:'success',data:category}) 
     })
     .catch(error=>{
         next(error)
@@ -31,7 +31,7 @@ exports.getCategory = (req,res,next)=>{
 exports.addNewCategory = (req,res,next)=>{
     const errors = validationResult(req)
     if(!errors.isEmpty()){
-        return res.status(422).json({success:false,body:{status:422,title:'Validation Error',data:errors}})
+        return res.status(422).json({success:false,code:422,status:'error',data:errors.array()[0]})
     }
     const {category_type,category_name} = req.body
     Category.create({
@@ -42,7 +42,7 @@ exports.addNewCategory = (req,res,next)=>{
         image:typeof req.file !== 'undefined'?`${req.file.destination}${req.file.filename}`.slice(8):null
     })
     .then(category=>{
-        return res.status(200).json({success:true,body:{status:200,title:'Response Success',data:{category,msg:'Single Category added successfully'}}}) 
+        return res.status(201).json({success:true,status:'success',data:{...category,msg:'Created category'}}) 
     })
     .catch(error=>{
         next(error)
@@ -51,7 +51,7 @@ exports.addNewCategory = (req,res,next)=>{
 exports.updateCategory = (req,res,next)=>{
     const errors = validationResult(req)
     if(!errors.isEmpty()){
-        return res.status(422).json({success:false,body:{status:422,title:'Validation Error',data:errors}})
+        return res.status(422).json({success:false,code:422,status:'error',data:errors.array()[0]})
     }
     const {category_type,category_name} = req.body
     const {id} = req.params
@@ -91,7 +91,7 @@ exports.getAllUser = (req,res,next)=>{
 exports.updatedPassword = catchAsync(async(req,res,next)=>{
     const errors = validationResult(req);
     if(!errors.isEmpty()){
-        return res.status(422).json({success:false,body:{status:422,title:'Validation Error',data:errors}});
+        return res.status(422).json({success:false,code:422,status:'error',data:errors.array()[0]});
     }
     const {oldPassword,password} = req.body
     const doMatch = await bcrypt.compare(oldPassword,req.user.password)
