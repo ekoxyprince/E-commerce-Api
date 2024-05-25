@@ -7,13 +7,14 @@ const PaymentService = require('../services/payment')
 const paymentInstance = new PaymentService()
 const {validationResult} = require('express-validator')
 const Order = require('../models/order')
+const ApiFeatures = require("../utilities/api-features")
 
 
 exports.getCategoriesByType = (req,res,next)=>{
     const {type} = req.params
     Category.find({categoryType:type})
     .then(categories=>{
-        return res.status(200).json({success:true,code:200,status:'success',data:{...categories,msg:'Single Category fetched successfully'}}) 
+        return res.status(200).json({success:true,code:200,status:'success',data:{categories,msg:'Single Category fetched successfully'}}) 
     })
     .catch(error=>{
         next(error)
@@ -22,11 +23,12 @@ exports.getCategoriesByType = (req,res,next)=>{
 
 exports.fetchAllProducts = (req,res,next)=>{
     Product
-    .find({productType:'Product'})
+    .find({productType:'product'})
     .populate('categoryId')
     .populate('userId')
+    .sort("-createdAt")
     .then(products=>{
-        return res.status(200).json({success:true,code:200,status:'success',data:{...products,msg:'Products fetched successfully'}}) 
+        return res.status(200).json({success:true,code:200,status:'success',data:{products,msg:'Products fetched successfully'}}) 
     })
     .catch(error=>{
         next(error)
@@ -34,11 +36,12 @@ exports.fetchAllProducts = (req,res,next)=>{
 }
 exports.fetchAllServices = (req,res,next)=>{
     Product
-    .find({productType:'Service'})
+    .find({productType:'service'})
     .populate('categoryId')
     .populate('userId')
+    .sort("-createdAt")
     .then(services=>{
-        return res.status(200).json({success:true,code:200,status:'success',data:{...services,msg:'Services fetched successfully'}}) 
+        return res.status(200).json({success:true,code:200,status:'success',data:{services,msg:'Services fetched successfully'}}) 
     })
     .catch(error=>{
         next(error)
@@ -54,7 +57,7 @@ exports.fetchSingleProduct = (req,res,next)=>{
         if(!product){
             return res.status(400).json({success:false,code:400,status:'error',data:{path:'id',msg:`No product found with id=${id} please verify id`,value:id,location:'params',type:'route parameter'}})    
         }
-        return res.status(200).json({success:true,code:200,status:'success',data:{...product,msg:'Product fetched successfully'}}) 
+        return res.status(200).json({success:true,code:200,status:'success',data:{product,msg:'Product fetched successfully'}}) 
     })
     .catch(error=>{
         next(error)
@@ -70,7 +73,7 @@ exports.fetchSingleService = (req,res,next)=>{
         if(!service){
             return res.status(400).json({success:false,code:400,status:'error',data:{path:'id',msg:`No Service found with id=${id} please verify id.`,value:id,location:'params',type:'route parameter'}})    
         }
-        return res.status(200).json({success:true,code:200,status:'success',data:{...service,msg:'Service fetched successfully'}}) 
+        return res.status(200).json({success:true,code:200,status:'success',data:{service,msg:'Service fetched successfully'}}) 
     })
     .catch(error=>{
         next(error)
@@ -110,7 +113,7 @@ exports.createNewProduct = (req,res,next)=>{
        updatedAt:new Date(Date.now())
     })
     .then(product=>{
-        return res.status(200).json({success:true,code:200,status:'success',data:{...product,msg:'Single product inserted successfully'}}) 
+        return res.status(200).json({success:true,code:200,status:'success',data:{product,msg:'Single product inserted successfully'}}) 
     })
     .catch(error=>{
         next(error)
@@ -141,7 +144,7 @@ exports.createNewProduct = (req,res,next)=>{
         }
        return product.removeImage(imgId)
         .then(product=>{
-            return res.status(200).json({success:true,code:200,status:'success',data:{...product,msg:'Product image was successfully removed'}}) 
+            return res.status(200).json({success:true,code:200,status:'success',data:{product,msg:'Product image was successfully removed'}}) 
         })
     })
     .catch(error=>{
@@ -220,7 +223,7 @@ exports.addTocart = tryCatch(async(req,res,next)=>{
     const {id} = req.body
     if(!req.session['cart'] || typeof req.session['cart'] === "undefined"){req.session['cart'] = []}
     const cart = req.session['cart']
-    const product = await Product.findOne({productType:'Product',_id:id})
+    const product = await Product.findOne({productType:'product',_id:id})
     if(product){
     const existingItemIndex = cart.findIndex(cart=>cart.product.id.toString() === id.toString())
     if(existingItemIndex > -1){
@@ -267,7 +270,7 @@ exports.startPayment = tryCatch(async(req,res,next)=>{
         amount:order.total,
         orderId:id
      })
-     res.status(201).json({success:true,status:'Payment Started',status:201,data:response})
+     res.status(201).json({success:true,status:'Payment Started',status:201,data:{response}})
 })
 exports.createPayment = tryCatch(async(req,res,next)=>{
     const response = await paymentInstance.createPayment(req.query)
@@ -285,7 +288,12 @@ exports.getPayment = tryCatch(async(req,res,next)=>{
     const response = await paymentInstance.paymentReceipt(req.query)
     res.status(200).json({success:true,status:'Payment Details',status:200,data:response})
 })
-exports.filterProducts = tryCatch((req,res,next)=>{
-    
+exports.filterProducts = tryCatch(async(req,res,next)=>{
+    const features = new ApiFeatures(Product.find(),req.query)
+    .filter()
+    .sort()
+    .limitFields()
+    const data = await features.query
+    res.status(200).json({success:true,status:'Payment Details',status:200,data:{product:data}})
 })
 

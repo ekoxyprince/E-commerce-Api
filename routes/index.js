@@ -50,7 +50,7 @@ router
 .route('/payment_details')
 .get([auth],controller.getPayment)
 router
-.route('/filter')
-.get([auth],controller.filterProducts)
+.route('/product-filter')
+.get(controller.filterProducts)
 
 module.exports = router

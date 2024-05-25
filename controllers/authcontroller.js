@@ -72,7 +72,7 @@ User.findOne({email:email})
   return user.save()
   .then(saved=>{
     //Email function call should be here
-    res.status(200).json({success:true,code:200,status:'success',data:{...saved,msg:'Reset link has been successfully sent'}}) 
+    res.status(200).json({success:true,code:200,status:'success',data:{...saved['_doc'],msg:'Reset link has been successfully sent'}}) 
   })
 })
 .catch(err=>{
@@ -88,7 +88,7 @@ if(!errors.isEmpty()){
   User.findOne({resetToken:resetToken,resetTokenExpires:{$gt:Date.now()}})
   .then(user=>{
     if(!user){
-      return res.status(400).json({success:false,code:401,status:'error',data:{path:'resetToken',msg:'Invalid token session',value:email,location:'body',type:'field'}})  
+      return res.status(400).json({success:false,code:401,status:'error',data:{path:'resetToken',msg:'Invalid token session',value:resetToken,location:'body',type:'field'}})  
     }
     return bcrypt.hash(password,12)
     .then(hashedPassword=>{
@@ -99,7 +99,7 @@ if(!errors.isEmpty()){
     })
     .then(saved=>{
     //Email function call should be here
-    res.status(200).json({success:true,code:200,status:'success',data:{...saved,msg:'Password reset was successful'}}) 
+    res.status(200).json({success:true,code:200,status:'success',data:{...saved['_doc'],msg:'Password reset was successful'}}) 
     })
   })
   .then(err=>{
