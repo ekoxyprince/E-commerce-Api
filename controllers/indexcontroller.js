@@ -50,7 +50,7 @@ exports.fetchAllServices = (req,res,next)=>{
 exports.fetchSingleProduct = (req,res,next)=>{
     const {id} = req.params
     Product
-    .findOne({productType:'Product',_id:id})
+    .findOne({productType:'product',_id:id})
     .populate('categoryId')
     .populate('userId')
     .then(product=>{
@@ -66,7 +66,7 @@ exports.fetchSingleProduct = (req,res,next)=>{
 exports.fetchSingleService = (req,res,next)=>{
     const {id} = req.params
     Product
-    .findOne({productType:'Service',_id:id})
+    .findOne({productType:'service',_id:id})
     .populate('categoryId')
     .populate('userId')
     .then(service=>{
