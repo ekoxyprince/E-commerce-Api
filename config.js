@@ -10,7 +10,7 @@ module.exports ={
     process.env.REMOTE_DOMAIN,
     server:process.env.NODE_ENV ==='development'?
     process.env.LOCAL_SERVER:
-    process.env.REMOTE_REMOTE,
+    process.env.REMOTE_SERVER,
     google_client_id:process.env.GOOGLE_CLIENT_ID,
     google_client_secret:process.env.GOOGLE_CLIENT_SECRET,
     twitter_client_key:process.env.TWITTER_CLIENT_KEY,
