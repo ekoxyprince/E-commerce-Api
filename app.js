@@ -53,7 +53,7 @@ app.use(
     secret: session_secret,
     store: store,
     cookie: {
-      maxAge: 60000 * 60,
+      maxAge: 1000 * 60 * 60 * 24,
     },
   })
 );
