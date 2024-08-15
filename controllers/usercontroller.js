@@ -144,8 +144,6 @@ exports.getUserOrders = (req, res, next) => {
     })
     .catch((error) => next(error));
 };
-    .catch((error) => next(error));
-};
 
 exports.getSingleOrder = (req, res, next) => {
   const { id } = req.params;
@@ -183,7 +181,5 @@ exports.fetchUserProducts = (req, res, next) => {
         data: { products, msg: "User products fetched!" },
       });
     })
-    .catch((error) => next(error));
-};
     .catch((error) => next(error));
 };

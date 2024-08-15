@@ -41,9 +41,9 @@ exports.catName = body("category_name")
 exports.catType = body("category_type")
   .notEmpty()
   .withMessage("Category type field is required");
-  exports.subCatType = body("category_type")
-    .notEmpty()
-    .withMessage("subCtegory type field is required");
+exports.subCatType = body("category_type")
+  .notEmpty()
+  .withMessage("subCtegory type field is required");
 
 exports.oldPassword = body("oldPassword")
   .notEmpty()
