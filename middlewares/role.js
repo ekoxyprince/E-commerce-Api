@@ -1,7 +1,6 @@
 
 exports.user = (req,res,next)=>{
 const users = ['seller','buyer','user']
-console.log(req.user)
     if(users.findIndex(i=>i==req.user.role)<0){
         return res.status(403).json({success:false,body:{status:403,title:'Unauthorized Request',data:{location:'database',path:'user',field:'role',msg:"User is not authorized"}}})
     }
