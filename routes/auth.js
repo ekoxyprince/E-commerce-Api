@@ -1,4 +1,5 @@
 const { Router } = require("express");
+const { Router } = require("express");
 const router = Router();
 const controller = require("../controllers/authcontroller");
 const {
@@ -22,7 +23,13 @@ router
   .route("/forgot_password")
   .post([email], controller.forgotPassword)
   .patch([resetToken, password], controller.resetPassword);
+  .route("/forgot_password")
+  .post([email], controller.forgotPassword)
+  .patch([resetToken, password], controller.resetPassword);
 router
+  .route("/google")
+  .get(passport.authenticate("google", { scope: ["profile", "email"] }));
+router.route("/google/callback").post(auth.googleOauth);
   .route("/google")
   .get(passport.authenticate("google", { scope: ["profile", "email"] }));
 router.route("/google/callback").post(auth.googleOauth);
@@ -32,9 +39,19 @@ router
 router.route("/twitter/callback").post(auth.twitterOauth);
 router.route("/facebook").get(passport.authenticate("facebook"));
 router.route("/facebook/callback").post(auth.facebookOauth);
+  .route("/twitter")
+  .get(passport.authenticate("twitter", { scope: ["profile"] }));
+router.route("/twitter/callback").post(auth.twitterOauth);
+router.route("/facebook").get(passport.authenticate("facebook"));
+router.route("/facebook/callback").post(auth.facebookOauth);
 router
   .route("/waitlist")
   .post([user, fullname, password], controller.addWaitlist)
   .patch(controller.updateWaitlistDetails);
+  .route("/waitlist")
+  .post([user, fullname, password], controller.addWaitlist)
+  .patch(controller.updateWaitlistDetails);
+
+module.exports = router;
 
 module.exports = router;

@@ -1,7 +1,5 @@
 const Category = require("../models/category");
 const Product = require("../models/product");
-const mongoose = require("mongoose");
-
 const { server } = require("../config");
 const fs = require("fs");
 const tryCatch = require("../utilities/catchasync");
@@ -10,8 +8,7 @@ const paymentInstance = new PaymentService();
 const { validationResult } = require("express-validator");
 const Order = require("../models/order");
 const ApiFeatures = require("../utilities/api-features");
-const Mailgen = require("mailgen");
-const nodemailer = require("nodemailer");
+
 exports.getCategoriesByType = (req, res, next) => {
   const { type } = req.params;
   Category.find({ categoryType: type })
@@ -172,107 +169,6 @@ exports.createNewProduct = async (req, res, next) => {
     });
 };
 
-exports.getMerchantProducts = async (req, res, next) => {
-  const userId = req.user._id;
-  try {
-    const merchantProducts = await Product.find({ userId });
-    if (!merchantProducts) {
-      res.status(404).json({ status: true, msg: "no product found" });
-      return;
-    }
-    res.status(200).json({
-      number: merchantProducts.length,
-      status: true,
-      products: merchantProducts,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-exports.getOrdersByVendor = async (req, res) => {
-  const vendorId = req.user._id;
-
-  try {
-    const orders = await Order.aggregate([
-      {
-        $unwind: "$items",
-      },
-      {
-        $match: {
-          "items.vendorid": new mongoose.Types.ObjectId(vendorId),
-        },
-      },
-      {
-        $lookup: {
-          from: "products",
-          localField: "items.product",
-          foreignField: "_id",
-          as: "productDetails",
-        },
-      },
-      {
-        $unwind: "$productDetails",
-      },
-      {
-        $group: {
-          _id: "$_id",
-          orderNo: { $first: "$orderNo" },
-          items: {
-            $push: {
-              quantity: "$items.quantity",
-              commission: "$items.commission",
-              total: "$items.total",
-              product: {
-                _id: "$productDetails._id",
-                productName: "$productDetails.productName",
-                images: "$productDetails.images",
-              },
-            },
-          },
-          userId: { $first: "$userId" },
-          total: { $first: "$total" },
-          totalCommission: { $first: "$totalCommission" },
-          status: { $first: "$status" },
-          address: { $first: "$address" },
-          createdAt: { $first: "$createdAt" },
-          updatedAt: { $first: "$updatedAt" },
-        },
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "userId",
-          foreignField: "_id",
-          as: "userDetails",
-        },
-      },
-      {
-        $unwind: "$userDetails",
-      },
-      {
-        $project: {
-          orderNo: 1,
-          items: 1,
-          total: 1,
-          totalCommission: 1,
-          status: 1,
-          address: 1,
-          createdAt: 1,
-          updatedAt: 1,
-          user: {
-            fullname: "$userDetails.fullname",
-          },
-        },
-      },
-    ]);
-
-    res.status(200).json(orders);
-  } catch (error) {
-    console.error("Error fetching orders by vendor:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
 exports.fetchRelatedProducts = (req, res, next) => {
   const { id, productType } = req.body;
   Product.find({ productType: productType, categoryId: id })
@@ -284,10 +180,7 @@ exports.fetchRelatedProducts = (req, res, next) => {
         body: {
           status: 200,
           status: "success",
-          data: {
-            products,
-            msg: "Related Products fetched successfully",
-          },
+          data: { products, msg: "Related Products fetched successfully" },
         },
       });
     })
@@ -343,6 +236,10 @@ exports.deleteProduct = (req, res, next) => {
             type: "route parameter",
           },
         });
+      }
+      const prodImages = product.images;
+      for (let image of prodImages) {
+        fs.unlinkSync(image.url.replace(server, "./public"));
       }
       return res.status(200).json({
         success: true,
@@ -429,10 +326,10 @@ exports.fetchCart = (req, res, next) => {
   if (!req.session["cart"] || typeof req.session["cart"] === "undefined") {
     req.session["cart"] = [];
   }
+
   const cart = req.session["cart"];
   res.status(200).json({
     success: true,
-    id: req.session.id,
     code: 200,
     status: "success",
     data: { cart, msg: "User cart fetched" },
@@ -461,7 +358,6 @@ exports.addTocart = tryCatch(async (req, res, next) => {
         product: {
           productName: product.productName,
           imageUrl: product.images[0].url,
-          vendorid: product.userId,
           id: product._id,
           price: product.prices.actualPrice - product.prices.discount,
         },
@@ -474,7 +370,6 @@ exports.addTocart = tryCatch(async (req, res, next) => {
   }
   res.status(200).json({
     success: true,
-    id: req.session.id,
     code: 200,
     status: "success",
     data: { cart, msg: "added to cart" },
@@ -546,14 +441,12 @@ exports.startPayment = tryCatch(async (req, res, next) => {
       },
     });
   }
-
-  const paymentdata = {
+  const response = await paymentInstance.startPayment({
     email: req.user.email,
     full_name: req.user.fullname || `User-${req.user._id}`,
     amount: order.total,
     orderId: id,
-  };
-  const response = await paymentInstance.startPayment(paymentdata);
+  });
   res.status(201).json({
     success: true,
     status: "Payment Started",
@@ -564,14 +457,9 @@ exports.startPayment = tryCatch(async (req, res, next) => {
 exports.createPayment = tryCatch(async (req, res, next) => {
   const response = await paymentInstance.createPayment(req.query);
   const newStatus = response.status === "success" ? "completed" : "pending";
-  const order = await Order.findOne({ _id: response.orderId }).populate(
-    "items.product"
-  );
-
+  const order = await Order.findOne({ _id: response.orderId });
   order.status = newStatus;
   const newOrder = await order.save();
-  await sendLoginNotification(req.user, order);
-
   res.status(201).json({
     success: true,
     status: "Payment Created",
@@ -579,86 +467,6 @@ exports.createPayment = tryCatch(async (req, res, next) => {
     data: { payment: response, order: newOrder },
   });
 });
-
-const sendLoginNotification = async (user, order) => {
-  let MailGenerator = new Mailgen({
-    theme: "salted",
-    product: {
-      name: "Urban trove",
-      link: "https://mailgen.js/",
-      copyright: "Copyright © 2024 Urban trove. All rights reserved.",
-      logo: "https://firebasestorage.googleapis.com/v0/b/newfoodapp-6f76d.appspot.com/o/logo.png?alt=media&token=91fc5015-ef7d-45a5-92cf-2950c3f61fdf",
-      logoHeight: "30px",
-    },
-  });
-  let response = {
-    body: {
-      name: user.fullname,
-      intro: [
-        "Thank you for shopping on Urban Trove!",
-        `Your order ${order.orderNo} has been confirmed successfully.`,
-        "It will be packed and shipped as soon as possible. You will receive a notification from us once the item(s) are ready for delivery.",
-      ],
-      table: [
-        {
-          title: `Order: ${order.orderNo}`,
-          data: [
-            ...order.items.map((item) => ({
-              item: item.product.productName,
-              price: `₦${Number(
-                item.product.prices.actualPrice
-              ).toLocaleString()}`,
-            })),
-            {
-              item: "Total",
-              price: `₦${Number(order.total).toLocaleString()}`,
-            },
-          ],
-          columns: {
-            customWidth: {
-              item: "60%",
-              price: "40%",
-            },
-            customAlignment: {
-              price: "right",
-            },
-          },
-        },
-      ],
-
-      outro:
-        "Need help, or have questions? Just reply to this email, we'd love to help.",
-      signature: "Warm Regards",
-    },
-  };
-
-  let mail = MailGenerator.generate(response);
-  let message = {
-    from: process.env.EMAIL,
-    to: user.email,
-    subject: `Your Urban Trove Order ${order.orderNo} has been Confirmed.`,
-    html: mail,
-  };
-
-  const transporter = nodemailer.createTransport({
-    host: "server2.lytehosting.com",
-    port: 465,
-    secure: true, // Use true since the port is 465
-    auth: {
-      user: process.env.EMAIL,
-      pass: process.env.PASSWORD,
-    },
-    tls: {
-      rejectUnauthorized: false,
-    },
-  });
-
-  try {
-    await transporter.sendMail(message);
-  } catch (err) {
-    console.error("Error sending email:", err);
-  }
-};
 exports.getPayment = tryCatch(async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
