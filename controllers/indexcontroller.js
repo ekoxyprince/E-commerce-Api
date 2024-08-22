@@ -28,6 +28,33 @@ exports.getCategoriesByType = (req, res, next) => {
     });
 };
 
+exports.getProductById = async (req, res, next) => {
+  const { selectedSubcategory } = req.query;
+  try {
+    const { _id } = await Category.findOne({
+      sub_category: selectedSubcategory,
+    });
+
+    const products = await Product.find({ categoryId: _id });
+    if (products.length == 0) {
+      return res.status(200).json({
+        success: true,
+        code: 200,
+        status: "success",
+        msg: "no product found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      code: 200,
+      status: "success",
+      data: { products, msg: "Products fetched successfully" },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.fetchAllProducts = (req, res, next) => {
   Product.find({ productType: "product" })
     .populate("categoryId")
@@ -420,7 +447,7 @@ exports.searchProduct = (req, res, next) => {
         success: true,
         code: 200,
         status: "success",
-        data: { ...products, msg: "Products fetched successfully" },
+        data: { products: [...products], msg: "Products fetched successfully" },
       });
     })
     .catch((error) => {

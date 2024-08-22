@@ -8,6 +8,8 @@ const { imageUpload } = require("../middlewares/fileupload");
 router.route("/category/:type").get(controller.getCategoriesByType);
 router.route("/products").get(controller.fetchAllProducts);
 router.route("/services").get(controller.fetchAllServices);
+router.route("/categories").get(controller.getProductById);
+
 router
   .route("/product/:id")
   .get(controller.fetchSingleProduct)
