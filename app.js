@@ -13,7 +13,7 @@ const corsOptions = require("./config/corsOptions");
 const logger = require("morgan");
 const rateLimit = require("express-rate-limit");
 const cors = require("cors");
-const { session_secret, database_uri } = require("./config");
+const { allowedOrigin, session_secret, database_uri } = require("./config");
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
 const expressErrorHandler = require("./middlewares/errorhandler");
@@ -39,8 +39,12 @@ app.use(compression());
 app.use(helmet());
 app.use(logger("dev"));
 app.use(cookieParser());
-app.use(cors(corsOptions));
-
+app.use(
+  cors({
+    origin: allowedOrigin,
+    credentials: true,
+  })
+);
 
 app.use(
   session({
