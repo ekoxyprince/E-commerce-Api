@@ -43,16 +43,10 @@ app.use(cors({ origin: true, credentials: true }));
 
 app.use(
   session({
-    resave: false,
-    saveUninitialized: false,
     secret: session_secret,
-    store: store,
-    cookie: {
-      sameSite: "none",
-      httpOnly: false,
-      secure: true,
-      maxAge: 1000 * 60 * 60 * 24 * 30,
-    },
+    resave: true,
+    saveUninitialized: true,
+    cookie: { secure: false, httpOnly: false },
   })
 );
 
