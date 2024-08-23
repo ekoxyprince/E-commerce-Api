@@ -55,12 +55,11 @@ app.use(
     store: store,
     cookie: {
       httpOnly: false,
-      secure: true, 
-      sameSite: "Lax",
+      secure: true,
+      sameSite: "none",
     },
   })
 );
-
 
 app.use("/api/v1", rootRoutes);
 app.use("/api/v1/auth", authRoutes);
