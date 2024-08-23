@@ -49,7 +49,7 @@ app.use(
     cookie: {
       secure: true, 
       httpOnly: true,
-      sameSite: "None", 
+      sameSite: "strict", 
       maxAge: 1000 * 60 * 60 * 24 * 30,
     },
     store: store,
