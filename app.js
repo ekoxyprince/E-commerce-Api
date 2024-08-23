@@ -44,7 +44,7 @@ app.use(
     secret: session_secret,
     resave: true,
     saveUninitialized: true,
-    cookie: { secure: false, httpOnly: true },
+    cookie: { secure: false, httpOnly: false },
   })
 );
 
