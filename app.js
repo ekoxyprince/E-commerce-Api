@@ -45,11 +45,11 @@ app.use(
   session({
     secret: session_secret,
     resave: true,
+    store: store,
     saveUninitialized: true,
     cookie: { secure: false, httpOnly: false },
   })
 );
-
 
 app.use("/api/v1", rootRoutes);
 app.use("/api/v1/auth", authRoutes);
