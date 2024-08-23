@@ -38,13 +38,8 @@ app.use(compression());
 app.use(helmet());
 app.use(logger("dev"));
 app.use(cookieParser());
-const allowedOrigin = "";
-app.use(
-  cors({
-    origin: allowedOrigin,
-    credentials: true,
-  })
-);
+app.use(cors(corsOptions));
+
 
 app.use(
   session({
