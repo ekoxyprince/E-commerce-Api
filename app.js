@@ -31,7 +31,6 @@ const store = new MongoDBStore({
   collection: "sessions",
 });
 app.set("trust proxy", 1);
-app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
