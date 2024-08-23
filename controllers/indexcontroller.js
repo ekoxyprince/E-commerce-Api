@@ -459,6 +459,8 @@ exports.fetchCart = (req, res, next) => {
     req.session["cart"] = [];
   }
   const cart = req.session["cart"];
+  console.log(req.session.id);
+
   res.status(200).json({
     success: true,
     id: req.session.id,
