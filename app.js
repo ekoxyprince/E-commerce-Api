@@ -31,7 +31,6 @@ const store = new MongoDBStore({
   collection: "sessions",
 });
 app.set("trust proxy", 1);
-app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -55,8 +54,8 @@ app.use(
     store: store,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Only set to true if your frontend is served over HTTPS
-      sameSite: "Lax", // Can be set to 'Strict' or 'None' depending on your requirements
+      secure: true, 
+      sameSite: "Lax",
     },
   })
 );
