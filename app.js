@@ -58,7 +58,10 @@ app.use(
     },
   })
 );
-
+app.use((req, res, next) => {
+  console.log("Session ID:", req.sessionID);
+  next();
+});
 app.use("/api/v1", rootRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/user", userRoutes);
