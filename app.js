@@ -40,7 +40,7 @@ app.use(helmet());
 app.use(logger("dev"));
 app.use(cookieParser());
 
-app.use(cors(corsOptions));
+app.use(cors({ origin: true, credentials: true }));
 
 app.use(
   session({
