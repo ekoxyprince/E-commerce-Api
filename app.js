@@ -53,6 +53,8 @@ app.use(
     cookie: {
       sameSite: "none",
       httpOnly: true,
+      domain: "https://www.urbantrov.com.ng",
+      path: "/",
       secure: true,
       maxAge: 1000 * 60 * 60 * 24 * 30,
     },
