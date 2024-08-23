@@ -46,24 +46,25 @@ app.use(
 
 app.use(
   session({
+    secret: session_secret,
     resave: false,
     saveUninitialized: false,
-    secret: session_secret,
     store: store,
     cookie: {
       sameSite: "none",
       httpOnly: true,
-      domain: "urbantrov.com.ng",
-      path: "/",
       secure: true,
       maxAge: 1000 * 60 * 60 * 24 * 30,
     },
   })
 );
+
 app.use((req, res, next) => {
   console.log("Session ID:", req.sessionID);
+  console.log("Session Data:", req.session);
   next();
 });
+
 app.use("/api/v1", rootRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/user", userRoutes);
