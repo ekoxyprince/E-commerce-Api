@@ -30,6 +30,8 @@ const store = new MongoDBStore({
   uri: database_uri,
   collection: "sessions",
 });
+app.set("trust proxy", 1);
+
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -41,10 +43,16 @@ app.use(cors({ origin: true, credentials: true }));
 
 app.use(
   session({
+    resave: false,
+    saveUninitialized: false,
     secret: session_secret,
-    resave: true,
-    saveUninitialized: true,
-    cookie: { secure: false, httpOnly: false },
+    store: store,
+    cookie: {
+      sameSite: "none",
+      httpOnly: false,
+      secure: true,
+      maxAge: 1000 * 60 * 60 * 24 * 30,
+    },
   })
 );
 
