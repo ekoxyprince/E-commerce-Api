@@ -50,6 +50,11 @@ app.use(
     saveUninitialized: false,
     secret: session_secret,
     store: store,
+    cookie: {
+      secure: process.env.NODE_ENV === "production", 
+      httpOnly: true,
+      sameSite: "none", 
+    },
   })
 );
 
