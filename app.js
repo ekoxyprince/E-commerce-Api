@@ -49,15 +49,13 @@ app.use(
     cookie: {
       secure: true, // Set to true if using HTTPS
       httpOnly: true,
-      sameSite: "None", // Allow cross-site cookies
+      sameSite: true,
       domain: "urbantrov.com.ng", // Set this if you are not using subdomains
       maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
     },
     store: store, // Use MongoDBStore or your preferred store
   })
 );
-
-
 
 app.use("/api/v1", rootRoutes);
 app.use("/api/v1/auth", authRoutes);
