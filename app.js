@@ -27,10 +27,7 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 const store = new MongoDBStore({
-  uri:
-    process.env.NODE_ENV === "development"
-      ? process.env.LOCAL_DB_URI
-      : process.env.REMOTE_DB_URI,
+  uri: database_uri,
   collection: "sessions",
 });
 app.set("trust proxy", 1);
@@ -43,7 +40,7 @@ app.use(helmet());
 app.use(logger("dev"));
 app.use(cookieParser());
 
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({ origin: allowedOrigin, optionsSuccessStatus: 200 }));
 
 app.use(
   session({
@@ -51,12 +48,6 @@ app.use(
     saveUninitialized: false,
     secret: session_secret,
     store: store,
-    cookie: {
-      sameSite: "none",
-      httpOnly: true,
-      secure: true,
-      maxAge: 1000 * 60 * 60 * 24 * 30,
-    },
   })
 );
 
