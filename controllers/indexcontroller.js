@@ -501,6 +501,8 @@ exports.addTocart = tryCatch(async (req, res, next) => {
       cart.push(cartItem);
     }
   }
+
+  console.log(req.session.id);
   res.status(200).json({
     success: true,
     id: req.session.id,
