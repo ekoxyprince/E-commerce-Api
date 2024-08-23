@@ -33,7 +33,7 @@ const store = new MongoDBStore({
       : process.env.REMOTE_DB_URI,
   collection: "sessions",
 });
-app.set("trust proxy", 1);
+app.set("trust proxy", true);
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 app.use(bodyParser.json());
@@ -53,7 +53,7 @@ app.use(
     store: store,
     cookie: {
       sameSite: "none",
-      httpOnly: false,
+      httpOnly: true,
       secure: true,
       maxAge: 1000 * 60 * 60 * 24 * 30,
     },
