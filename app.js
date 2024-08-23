@@ -9,11 +9,11 @@ const adminRoutes = require("./routes/admin");
 const compression = require("compression");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
-const corsOptions = require("./config/corsOptions")
+const corsOptions = require("./config/corsOptions");
 const logger = require("morgan");
 const rateLimit = require("express-rate-limit");
 const cors = require("cors");
-const { allowedOrigin, session_secret, database_uri } = require("./config");
+const { session_secret, database_uri } = require("./config");
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
 const expressErrorHandler = require("./middlewares/errorhandler");
@@ -39,8 +39,13 @@ app.use(compression());
 app.use(helmet());
 app.use(logger("dev"));
 app.use(cookieParser());
-
-app.use(cors({ origin: true, credentials: true }));
+const allowedOrigin = "https://urbantrov.com.ng";
+app.use(
+  cors({
+    origin: allowedOrigin,
+    credentials: true,
+  })
+);
 
 app.use(
   session({
@@ -48,8 +53,14 @@ app.use(
     saveUninitialized: false,
     secret: session_secret,
     store: store,
+    cookie: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // Only set to true if your frontend is served over HTTPS
+      sameSite: "Lax", // Can be set to 'Strict' or 'None' depending on your requirements
+    },
   })
 );
+
 
 app.use("/api/v1", rootRoutes);
 app.use("/api/v1/auth", authRoutes);
