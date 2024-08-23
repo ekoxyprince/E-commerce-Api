@@ -39,7 +39,7 @@ app.use(compression());
 app.use(helmet());
 app.use(logger("dev"));
 app.use(cookieParser());
-const allowedOrigin = "https://urbantrov.com.ng";
+const allowedOrigin = "https://www.urbantrov.com.ng";
 app.use(
   cors({
     origin: allowedOrigin,
