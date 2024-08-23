@@ -45,7 +45,7 @@ app.use(
   session({
     secret: session_secret,
     resave: true,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: {
       secure: true, // Set to true if using HTTPS
       httpOnly: true,
