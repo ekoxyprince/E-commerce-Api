@@ -43,17 +43,16 @@ app.use(cors({ origin: true, credentials: true }));
 
 app.use(
   session({
+    resave: false,
+    saveUninitialized: true,
     secret: session_secret,
-    resave: true,
-    saveUninitialized: false,
+    store: store,
     cookie: {
-      secure: true, // Set to true if using HTTPS
-      httpOnly: true,
       sameSite: "none",
-      domain: "urbantrov.com.ng", // Set this if you are not using subdomains
-      maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
+      httpOnly: true,
+      secure: false,
+      maxAge: 1000 * 60 * 60 * 24 * 30,
     },
-    store: store, // Use MongoDBStore or your preferred store
   })
 );
 
