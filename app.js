@@ -37,12 +37,7 @@ app.use(compression());
 app.use(helmet());
 app.use(logger("dev"));
 app.use(cookieParser());
-app.use(
-  cors({
-    origin: allowedOrigin,
-    credentials: true,
-  })
-);
+app.set("trust proxy", 1);
 
 app.use(
   session({
@@ -51,9 +46,10 @@ app.use(
     secret: session_secret,
     store: store,
     cookie: {
-      secure: process.env.NODE_ENV === "production", 
+      sameSite: "none",
       httpOnly: true,
-      sameSite: "none", 
+      secure: true,
+      maxAge: 1000 * 60 * 60 * 24 * 30,
     },
   })
 );
