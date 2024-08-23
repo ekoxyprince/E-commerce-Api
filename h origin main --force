@@ -1,0 +1,31 @@
+* [33m27f4d09[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m)[m update1.02
+[31m|[m * [33m9821331[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m fixed products
+[31m|[m[31m/[m  
+* [33ma509a3d[m test
+* [33m509b644[m passport
+* [33me5fc528[m added delivery details
+* [33m0c2452f[m update1.01
+* [33m207ee76[m cookie
+*   [33mace9999[m Merge branch 'main' of https://github.com/urbantrove-ng/Urbantrove-Api
+[33m|[m[34m\[m  
+[33m|[m * [33md0117e9[m Update app.js
+[33m|[m * [33m9a919dd[m Update allowedOrigins.js
+[33m|[m * [33mf13bc88[m fixes
+[33m|[m * [33m59c0ebf[m increase cookie expiry date
+[33m|[m * [33m4303272[m increase cookie duration
+[33m|[m * [33mda204f9[m fixes
+[33m|[m * [33mebce71d[m auth fix, product and category
+* [34m|[m [33m8e4a6be[m update1.0
+[34m|[m[34m/[m  
+* [33m3de3b8f[m mod(): product
+* [33m2bbc73c[m mod(): product
+* [33mef2e363[m mod(): forgot_password
+* [33m2c59411[m mod(): controllers
+* [33m09ef735[m Added waitlist endpoint
+* [33m539817f[m Added slot in controller for filter product route
+* [33m20d8e01[m added endpoint for fetching user related Products
+* [33m2cdf979[m added endpoint for fetching user related Products
+* [33m264931d[m completed orders,checkout,payments and several endpoint
+* [33m67b8abd[m fixed issue with controller
+* [33m051bc77[m Finished User and admin update password and details endpoint
+* [33mcd6bd83[m initial commit

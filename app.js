@@ -54,7 +54,7 @@ app.use(
     store: store,
     cookie: {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+      secure: true,
       sameSite: "lax", // Helps with CSRF protection
     },
   })
