@@ -26,8 +26,6 @@ const limiter = rateLimit({
   standardHeaders: "draft-7",
   legacyHeaders: false,
 });
-app.set("trust proxy", 1);
-
 const store = new MongoDBStore({
   uri:
     process.env.NODE_ENV === "development"
@@ -35,6 +33,7 @@ const store = new MongoDBStore({
       : process.env.REMOTE_DB_URI,
   collection: "sessions",
 });
+app.set("trust proxy", 1);
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 app.use(bodyParser.json());
@@ -53,9 +52,10 @@ app.use(
     secret: session_secret,
     store: store,
     cookie: {
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: "none",
+      httpOnly: true,
       secure: true,
-      sameSite: "lax", // Helps with CSRF protection
+      maxAge: 1000 * 60 * 60 * 24 * 30,
     },
   })
 );
