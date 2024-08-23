@@ -40,7 +40,14 @@ app.use(helmet());
 app.use(logger("dev"));
 app.use(cookieParser());
 
-app.use(cors({ origin: allowedOrigin, optionsSuccessStatus: 200 }));
+const corsOptions = {
+  origin: allowedOrigin, // Ensure this is set to your frontend's URL
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  allowedHeaders: "Content-Type,Authorization",
+  credentials: true, // Allow credentials to be included
+};
+
+app.use(cors(corsOptions));
 
 app.use(
   session({
