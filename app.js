@@ -55,8 +55,8 @@ app.use(
     store: store,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Only set to true if your frontend is served over HTTPS
-      sameSite: "Lax", // Can be set to 'Strict' or 'None' depending on your requirements
+      secure: true, 
+      sameSite: "Lax",
     },
   })
 );
