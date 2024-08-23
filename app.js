@@ -43,18 +43,21 @@ app.use(cors({ origin: true, credentials: true }));
 
 app.use(
   session({
-    resave: false,
-    saveUninitialized: false,
     secret: session_secret,
-    store: store,
+    resave: true,
+    saveUninitialized: true,
     cookie: {
-      sameSite: "none",
+      secure: true, // Set to true if using HTTPS
       httpOnly: true,
-      secure: false,
-      maxAge: 1000 * 60 * 60 * 24 * 30,
+      sameSite: "None", // Allow cross-site cookies
+      domain: "urbantrov.com.ng", // Set this if you are not using subdomains
+      maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
     },
+    store: store, // Use MongoDBStore or your preferred store
   })
 );
+
+
 
 app.use("/api/v1", rootRoutes);
 app.use("/api/v1/auth", authRoutes);
