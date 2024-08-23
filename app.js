@@ -9,7 +9,7 @@ const adminRoutes = require("./routes/admin");
 const compression = require("compression");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
-
+const corsOptions = require("./config/corsOptions")
 const logger = require("morgan");
 const rateLimit = require("express-rate-limit");
 const cors = require("cors");
@@ -40,9 +40,7 @@ app.use(helmet());
 app.use(logger("dev"));
 app.use(cookieParser());
 
-app.use(
-  cors({ origin: "https://urbantrov.com.ng", optionsSuccessStatus: 200 })
-);
+app.use(cors(corsOptions));
 
 app.use(
   session({
