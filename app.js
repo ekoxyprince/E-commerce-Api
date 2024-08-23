@@ -38,7 +38,7 @@ app.use(compression());
 app.use(helmet());
 app.use(logger("dev"));
 app.use(cookieParser());
-const allowedOrigin = "https://www.urbantrov.com.ng";
+const allowedOrigin = "https://client-pi-sooty.vercel.app/";
 app.use(
   cors({
     origin: allowedOrigin,
