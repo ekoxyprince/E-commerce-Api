@@ -49,7 +49,7 @@ app.use(
     secret: session_secret,
     store: store,
     cookie: {
-      sameSite: "lax",
+      sameSite: "none",
       httpOnly: true,
       secure: true,
       maxAge: 1000 * 60 * 60 * 24 * 30,
@@ -57,6 +57,11 @@ app.use(
   })
 );
 
+app.use((req, res, next) => {
+  req.session.visited = true;
+  console.log(req.sessionID);
+  next()
+});
 app.use("/api/v1", rootRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/user", userRoutes);
