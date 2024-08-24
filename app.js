@@ -9,7 +9,7 @@ const adminRoutes = require("./routes/admin");
 const compression = require("compression");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
-const corsOptions = require("./config/corsOptions");
+
 const logger = require("morgan");
 const rateLimit = require("express-rate-limit");
 const cors = require("cors");
@@ -31,7 +31,7 @@ const store = new MongoDBStore({
   collection: "sessions",
 });
 app.set("trust proxy", 1);
-
+app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -39,12 +39,13 @@ app.use(compression());
 app.use(helmet());
 app.use(logger("dev"));
 app.use(cookieParser());
+
 app.use(cors({ origin: true, credentials: true }));
 
 app.use(
   session({
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     secret: session_secret,
     store: store,
     cookie: {
