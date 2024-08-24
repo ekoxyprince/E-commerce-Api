@@ -49,7 +49,7 @@ app.use(
     secret: session_secret,
     store: store,
     cookie: {
-      sameSite: "none",
+      sameSite: "lax",
       httpOnly: true,
       secure: true,
       maxAge: 1000 * 60 * 60 * 24 * 30,
