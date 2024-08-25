@@ -14,8 +14,7 @@ const logger = require("morgan");
 const rateLimit = require("express-rate-limit");
 const cors = require("cors");
 const { allowedOrigin, session_secret, database_uri } = require("./config");
-const session = require("express-session");
-const MongoDBStore = require("connect-mongodb-session")(session);
+
 const expressErrorHandler = require("./middlewares/errorhandler");
 const notFoundMiddleware = require("./middlewares/notfound");
 
@@ -26,11 +25,7 @@ const limiter = rateLimit({
   standardHeaders: "draft-7",
   legacyHeaders: false,
 });
-const store = new MongoDBStore({
-  uri: database_uri,
-  collection: "sessions",
-});
-app.set("trust proxy", 1);
+
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 app.use(bodyParser.json());
@@ -42,26 +37,6 @@ app.use(cookieParser());
 
 app.use(cors({ origin: true, credentials: true }));
 
-app.use(
-  session({
-    resave: false,
-    saveUninitialized: false,
-    secret: session_secret,
-    store: store,
-    cookie: {
-      sameSite: "none",
-      httpOnly: true,
-      secure: true,
-      maxAge: 1000 * 60 * 60 * 24 * 30,
-    },
-  })
-);
-
-app.use((req, res, next) => {
-  req.session.visited = true;
-  console.log(req.sessionID);
-  next()
-});
 app.use("/api/v1", rootRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/user", userRoutes);

@@ -1,6 +1,7 @@
 const Category = require("../models/category");
 const Product = require("../models/product");
 const mongoose = require("mongoose");
+const Cart = require("../models/cart");
 
 const { server } = require("../config");
 const fs = require("fs");
@@ -454,16 +455,14 @@ exports.searchProduct = (req, res, next) => {
       next(error);
     });
 };
-exports.fetchCart = (req, res, next) => {
-  if (!req.session["cart"] || typeof req.session["cart"] === "undefined") {
-    req.session["cart"] = [];
+exports.fetchCart = async (req, res, next) => {
+  let cart = await Cart.findOne({ userId: req.user._id });
+  if (!cart) {
+    cart = new Cart({ userId: req.user._id, items: [] });
   }
-  const cart = req.session["cart"];
-  console.log(req.session.id);
 
   res.status(200).json({
     success: true,
-    id: req.session.id,
     code: 200,
     status: "success",
     data: { cart, msg: "User cart fetched" },
@@ -471,21 +470,24 @@ exports.fetchCart = (req, res, next) => {
 };
 exports.addTocart = tryCatch(async (req, res, next) => {
   const { id } = req.body;
-  if (!req.session["cart"] || typeof req.session["cart"] === "undefined") {
-    req.session["cart"] = [];
+
+  // Fetch or create a cart for the user
+  let cart = await Cart.findOne({ userId: req.user._id });
+  if (!cart) {
+    cart = new Cart({ userId: req.user._id, items: [] });
   }
-  const cart = req.session["cart"];
+
   const product = await Product.findOne({ productType: "product", _id: id });
   if (product) {
-    const existingItemIndex = cart.findIndex(
-      (cart) => cart.product.id.toString() === id.toString()
+    const existingItemIndex = cart.items.findIndex(
+      (item) => item.product.id.toString() === id.toString()
     );
+
     if (existingItemIndex > -1) {
-      cart[existingItemIndex]["quantity"] =
-        parseInt(cart[existingItemIndex]["quantity"]) + 1;
-      cart[existingItemIndex]["total"] = Number(
-        parseInt(cart[existingItemIndex]["quantity"]) *
-          parseFloat(cart[existingItemIndex]["product"]["price"])
+      cart.items[existingItemIndex].quantity += 1;
+      cart.items[existingItemIndex].total = Number(
+        cart.items[existingItemIndex].quantity *
+          cart.items[existingItemIndex].product.price
       );
     } else {
       const cartItem = {
@@ -500,47 +502,73 @@ exports.addTocart = tryCatch(async (req, res, next) => {
         total: product.prices.actualPrice - product.prices.discount,
         shipping: product.prices.shippingFee || 0,
       };
-      cart.push(cartItem);
+      cart.items.push(cartItem);
     }
+
+    await cart.save();
+
+    res.status(200).json({
+      success: true,
+      code: 200,
+      status: "success",
+      data: { cart, msg: "Added to cart" },
+    });
+  } else {
+    res.status(404).json({
+      success: false,
+      code: 404,
+      status: "error",
+      msg: "Product not found",
+    });
+  }
+});
+exports.deleteFromCart = tryCatch(async (req, res, next) => {
+  const { id } = req.body;
+  const cart = await Cart.findOne({ userId: req.user._id });
+  if (!cart) {
+    return res.status(404).json({
+      success: false,
+      code: 404,
+      status: "error",
+      msg: "Cart not found",
+    });
   }
 
-  console.log(req.session.id);
+  // Find the index of the item to be deleted
+  const existingItemIndex = cart.items.findIndex(
+    (item) => item.product.id.toString() === id.toString()
+  );
+
+  if (existingItemIndex > -1) {
+    const item = cart.items[existingItemIndex];
+
+    if (item.quantity > 1) {
+      // Decrease quantity and update total
+      item.quantity -= 1;
+      item.total = Number(item.quantity * item.product.price);
+    } else {
+      // Remove the item from the cart
+      cart.items.splice(existingItemIndex, 1);
+    }
+
+    // Save the updated cart
+    await cart.save();
+  } else {
+    return res.status(404).json({
+      success: false,
+      code: 404,
+      status: "error",
+      msg: "Item not found in cart",
+    });
+  }
+
   res.status(200).json({
     success: true,
-    id: req.session.id,
     code: 200,
     status: "success",
-    data: { cart, msg: "added to cart" },
+    data: cart,
   });
 });
-exports.deleteFromCart = (req, res, next) => {
-  const { id } = req.body;
-  if (req.session["cart"] && req.session["cart"].length > 0) {
-    let cart = req.session["cart"];
-    const existingItemIndex = cart.findIndex(
-      (cart) => cart.product.id.toString() === id.toString()
-    );
-    if (existingItemIndex > -1 && cart[existingItemIndex]["quantity"] > 1) {
-      cart[existingItemIndex]["quantity"] =
-        parseInt(cart[existingItemIndex]["quantity"]) - 1;
-      cart[existingItemIndex]["total"] = Number(
-        parseInt(cart[existingItemIndex]["quantity"]) *
-          parseFloat(cart[existingItemIndex]["product"]["price"])
-      );
-    } else {
-      const filteredCart = cart.filter(
-        (cart) => cart.product.id.toString() !== id.toString()
-      );
-      req.session["cart"] = [...filteredCart];
-    }
-  }
-  res.status(200).json({
-    success: true,
-    code: 200,
-    status: "success",
-    data: { ...req.session["cart"] },
-  });
-};
 exports.getCurrentUserOrder = (req, res, next) => {
   if (req.session["cart"] && req.session["cart"].length > 0) {
     res.status(200).json({

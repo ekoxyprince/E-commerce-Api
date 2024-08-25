@@ -37,9 +37,9 @@ router.route("/search").get(controller.searchProduct);
 router.route("/related_products").get(controller.fetchRelatedProducts);
 router
   .route("/cart")
-  .get(controller.fetchCart)
-  .post(controller.addTocart)
-  .delete(controller.deleteFromCart);
+  .get([auth], controller.fetchCart)
+  .post([auth], controller.addTocart)
+  .delete([auth], controller.deleteFromCart);
 router.route("/order").get([auth], controller.getCurrentUserOrder);
 router
   .route("/payment")
