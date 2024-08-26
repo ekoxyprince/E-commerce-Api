@@ -47,6 +47,8 @@ exports.addItemToGuestCart = async (req, res) => {
 
       res.cookie("cartToken", cartToken, {
         httpOnly: true,
+        secure: true,
+        sameSite: "none",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
       });
 
@@ -99,6 +101,8 @@ exports.removeItemFromGuestCart = async (req, res) => {
 
       res.cookie("cartToken", cartToken, {
         httpOnly: true,
+        secure: true,
+        sameSite: "none",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
