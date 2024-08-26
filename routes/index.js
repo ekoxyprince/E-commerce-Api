@@ -36,11 +36,6 @@ router
   .delete([auth, merchant], controller.deleteProductImage);
 router.route("/search").get(controller.searchProduct);
 router.route("/related_products").get(controller.fetchRelatedProducts);
-router
-  .route("/cart")
-  .get([auth], controller.fetchCart)
-  .post([auth], controller.addTocart)
-  .delete([auth], controller.deleteFromCart);
 router.route("/order").get([auth], controller.getCurrentUserOrder);
 router
   .route("/payment")
@@ -52,7 +47,6 @@ router.route("/product-filter").get(controller.filterProducts);
 router.use(decodeGuestCart);
 
 router.post("/guestCart", cartController.addItemToGuestCart);
-
 router.get("/guestCart", cartController.fetchGuestCart);
 router.delete("/guestCart", cartController.removeItemFromGuestCart);
 
