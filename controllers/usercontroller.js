@@ -3,54 +3,15 @@ const bcrypt = require("bcryptjs");
 const { validationResult } = require("express-validator");
 const Order = require("../models/order");
 const Product = require("../models/product");
+const Cart = require("../models/cart");
+
 exports.checkOut = async (req, res, next) => {
   try {
-    if (req.session["cart"] && req.session["cart"].length > 0) {
-      const cart = req.session["cart"];
-      const orderItems = [];
-      let totalPrice = 0;
-      let totalCommission = 0;
-      const vendorIds = new Set();
+    // Fetch the user's cart
+    const cart = await Cart.findOne({ userId: req.user._id });
 
-      for (let item of cart) {
-        let orderItem = {};
-        orderItem["product"] = item.product.id;
-        orderItem["total"] =
-          parseFloat(item.total) + parseFloat(item.shipping) - item.total * 0.1;
-        orderItem["quantity"] = parseInt(item.quantity);
-        orderItem["vendorid"] = item.product.vendorid;
-        orderItem["commission"] = item.total * 0.1;
-        orderItems.push(orderItem);
-        vendorIds.add(item.product.vendorid);
-        totalPrice += parseFloat(item.total) + parseFloat(item.shipping);
-        totalCommission += orderItem["commission"];
-      }
-
-      // Convert Set to Array if you need to store multiple vendor IDs
-      const vendorIdsArray = Array.from(vendorIds);
-
-      const order = await Order.create({
-        items: orderItems,
-        userId: req.user._id,
-        total: totalPrice,
-        totalCommission,
-        address: req.user.location,
-        vendorid: vendorIdsArray, // Store multiple vendor IDs
-        status: "pending",
-        createdAt: new Date(Date.now()),
-        updatedAt: new Date(Date.now()),
-      });
-
-      req.session["cart"] = undefined;
-
-      res.status(200).json({
-        success: true,
-        status: "success",
-        code: 201,
-        data: { msg: "Order Successfully created", order },
-      });
-    } else {
-      res.status(400).json({
+    if (!cart || cart.items.length === 0) {
+      return res.status(400).json({
         success: false,
         status: "error",
         code: 400,
@@ -62,10 +23,63 @@ exports.checkOut = async (req, res, next) => {
         },
       });
     }
+
+    const orderItems = [];
+    let totalPrice = 0;
+    let totalCommission = 0;
+    const vendorIds = new Set();
+
+    // Loop through each item in the cart
+    for (let item of cart.items) {
+      const orderItem = {
+        product: item.product.id,
+        total:
+          parseFloat(item.total) + parseFloat(item.shipping) - item.total * 0.1,
+        quantity: parseInt(item.quantity),
+        vendorid: item.product.vendorid,
+        commission: item.total * 0.1,
+      };
+
+      orderItems.push(orderItem);
+      vendorIds.add(item.product.vendorid);
+      totalPrice += parseFloat(item.total) + parseFloat(item.shipping);
+      totalCommission += orderItem.commission;
+    }
+
+    // Convert Set to Array to store multiple vendor IDs
+    const vendorIdsArray = Array.from(vendorIds);
+
+    // Create the order
+    const order = await Order.create({
+      items: orderItems,
+      userId: req.user._id,
+      total: totalPrice,
+      totalCommission,
+      address: req.user.location,
+      vendorid: vendorIdsArray,
+      status: "pending",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    // Clear the user's cart after order creation
+    cart.items = [];
+    await cart.save();
+
+    res.status(201).json({
+      success: true,
+      status: "success",
+      code: 201,
+      data: {
+        msg: "Order Successfully created",
+        order,
+      },
+    });
   } catch (error) {
     next(error);
   }
 };
+
 
 exports.getUserDetails = (req, res, next) => {
   const user = req.user;

@@ -4,7 +4,8 @@ const { auth } = require("../middlewares/auth");
 const { merchant } = require("../middlewares/role");
 const controller = require("../controllers/indexcontroller");
 const { imageUpload } = require("../middlewares/fileupload");
-
+const cartController = require("../controllers/guestcontroller");
+const { decodeGuestCart } = require("../middlewares/decodeguestuser");
 router.route("/category/:type").get(controller.getCategoriesByType);
 router.route("/products").get(controller.fetchAllProducts);
 router.route("/services").get(controller.fetchAllServices);
@@ -47,5 +48,16 @@ router
   .post([auth], controller.startPayment);
 router.route("/payment_details").get([auth], controller.getPayment);
 router.route("/product-filter").get(controller.filterProducts);
+
+router.use(decodeGuestCart);
+
+router.post("/guestCart", cartController.addItemToGuestCart);
+
+router.get("/guestCart", cartController.fetchGuestCart);
+router.delete("/guestCart", cartController.removeItemFromGuestCart);
+
+
+
+module.exports = router;
 
 module.exports = router;

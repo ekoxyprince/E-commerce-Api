@@ -471,7 +471,6 @@ exports.fetchCart = async (req, res, next) => {
 exports.addTocart = tryCatch(async (req, res, next) => {
   const { id } = req.body;
 
-  // Fetch or create a cart for the user
   let cart = await Cart.findOne({ userId: req.user._id });
   if (!cart) {
     cart = new Cart({ userId: req.user._id, items: [] });
