@@ -7,10 +7,9 @@ const Cart = require("../models/cart");
 
 exports.checkOut = async (req, res, next) => {
   try {
-    // Fetch the user's cart
-    const cart = await Cart.findOne({ userId: req.user._id });
+    const cart = req.cart;
 
-    if (!cart || cart.items.length === 0) {
+    if (!cart || cart.length === 0) {
       return res.status(400).json({
         success: false,
         status: "error",
@@ -29,27 +28,26 @@ exports.checkOut = async (req, res, next) => {
     let totalCommission = 0;
     const vendorIds = new Set();
 
-    // Loop through each item in the cart
-    for (let item of cart.items) {
+    for (let item of cart) {
+      const itemTotal = parseFloat(item.total) + parseFloat(item.shipping);
+      const commission = item.total * 0.1;
+
       const orderItem = {
         product: item.product.id,
-        total:
-          parseFloat(item.total) + parseFloat(item.shipping) - item.total * 0.1,
+        total: itemTotal - commission,
         quantity: parseInt(item.quantity),
         vendorid: item.product.vendorid,
-        commission: item.total * 0.1,
+        commission: commission,
       };
 
       orderItems.push(orderItem);
       vendorIds.add(item.product.vendorid);
-      totalPrice += parseFloat(item.total) + parseFloat(item.shipping);
-      totalCommission += orderItem.commission;
+      totalPrice += itemTotal;
+      totalCommission += commission;
     }
 
-    // Convert Set to Array to store multiple vendor IDs
     const vendorIdsArray = Array.from(vendorIds);
 
-    // Create the order
     const order = await Order.create({
       items: orderItems,
       userId: req.user._id,
@@ -63,8 +61,11 @@ exports.checkOut = async (req, res, next) => {
     });
 
     // Clear the user's cart after order creation
-    cart.items = [];
-    await cart.save();
+  res.clearCookie("cartToken", {
+    httpOnly: true,
+    sameSite: "None",
+    secure: true,
+  });
 
     res.status(201).json({
       success: true,
@@ -79,7 +80,6 @@ exports.checkOut = async (req, res, next) => {
     next(error);
   }
 };
-
 
 exports.getUserDetails = (req, res, next) => {
   const user = req.user;

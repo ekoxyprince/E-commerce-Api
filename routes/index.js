@@ -1,6 +1,6 @@
 const { Router } = require("express");
 const router = Router();
-const { auth } = require("../middlewares/auth");
+const { auth, authcart } = require("../middlewares/auth");
 const { merchant } = require("../middlewares/role");
 const controller = require("../controllers/indexcontroller");
 const { imageUpload } = require("../middlewares/fileupload");
@@ -46,11 +46,9 @@ router.route("/product-filter").get(controller.filterProducts);
 
 router.use(decodeGuestCart);
 
-router.post("/guestCart", cartController.addItemToGuestCart);
-router.get("/guestCart", cartController.fetchGuestCart);
-router.delete("/guestCart", cartController.removeItemFromGuestCart);
-
-
+router.post("/cart", controller.addTocart);
+router.get("/cart", controller.fetchCart);
+router.delete("/cart", controller.deleteFromCart);
 
 module.exports = router;
 

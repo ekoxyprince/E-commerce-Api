@@ -1,7 +1,9 @@
 const Category = require("../models/category");
 const Product = require("../models/product");
+const jwt = require("jsonwebtoken");
+
 const mongoose = require("mongoose");
-const Cart = require("../models/cart");
+const { jwt_secret } = require("../config");
 
 const { server } = require("../config");
 const fs = require("fs");
@@ -455,40 +457,48 @@ exports.searchProduct = (req, res, next) => {
       next(error);
     });
 };
+
+const generateGuestCartToken = (cart) => {
+  return jwt.sign({ cart }, jwt_secret, { expiresIn: "7d" });
+};
 exports.fetchCart = async (req, res, next) => {
-  let cart = await Cart.findOne({ userId: req.user._id });
-  if (!cart) {
-    cart = new Cart({ userId: req.user._id, items: [] });
-  }
+  const cart = req.cart || [];
 
   res.status(200).json({
     success: true,
-    code: 200,
     status: "success",
-    data: { cart, msg: "User cart fetched" },
+    code: 200,
+    data: cart,
   });
 };
 exports.addTocart = tryCatch(async (req, res, next) => {
-  const { id } = req.body;
+  try {
+    const { id } = req.body;
+    const product = await Product.findOne({ productType: "product", _id: id });
 
-  let cart = await Cart.findOne({ userId: req.user._id });
-  if (!cart) {
-    cart = new Cart({ userId: req.user._id, items: [] });
-  }
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        code: 404,
+        status: "error",
+        msg: "Product not found",
+      });
+    }
 
-  const product = await Product.findOne({ productType: "product", _id: id });
-  if (product) {
-    const existingItemIndex = cart.items.findIndex(
+    let cart = req.cart || [];
+
+    const existingItemIndex = cart.findIndex(
       (item) => item.product.id.toString() === id.toString()
     );
 
     if (existingItemIndex > -1) {
-      cart.items[existingItemIndex].quantity += 1;
-      cart.items[existingItemIndex].total = Number(
-        cart.items[existingItemIndex].quantity *
-          cart.items[existingItemIndex].product.price
-      );
+      // If the product exists in the cart, update the quantity and total price
+      cart[existingItemIndex].quantity += 1;
+      cart[existingItemIndex].total =
+        cart[existingItemIndex].quantity *
+        (product.prices.actualPrice - product.prices.discount);
     } else {
+      // If the product is new in the cart, add it with initial quantity and total price
       const cartItem = {
         product: {
           productName: product.productName,
@@ -501,72 +511,85 @@ exports.addTocart = tryCatch(async (req, res, next) => {
         total: product.prices.actualPrice - product.prices.discount,
         shipping: product.prices.shippingFee || 0,
       };
-      cart.items.push(cartItem);
+      cart.push(cartItem);
     }
 
-    await cart.save();
+    const cartToken = generateGuestCartToken(cart);
+    res.cookie("cartToken", cartToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+    });
 
     res.status(200).json({
       success: true,
       code: 200,
       status: "success",
-      data: { cart, msg: "Added to cart" },
+      data: cart,
     });
-  } else {
-    res.status(404).json({
+  } catch (error) {
+    res.status(500).json({
       success: false,
-      code: 404,
+      code: 500,
       status: "error",
-      msg: "Product not found",
+      msg: "Internal server error",
     });
   }
 });
 exports.deleteFromCart = tryCatch(async (req, res, next) => {
-  const { id } = req.body;
-  const cart = await Cart.findOne({ userId: req.user._id });
-  if (!cart) {
-    return res.status(404).json({
-      success: false,
-      code: 404,
-      status: "error",
-      msg: "Cart not found",
-    });
-  }
+  try {
+    const { id } = req.body;
 
-  // Find the index of the item to be deleted
-  const existingItemIndex = cart.items.findIndex(
-    (item) => item.product.id.toString() === id.toString()
-  );
+    let cart = req.cart || [];
 
-  if (existingItemIndex > -1) {
-    const item = cart.items[existingItemIndex];
+    const existingItemIndex = cart.findIndex(
+      (item) => item.product.id.toString() === id.toString()
+    );
 
-    if (item.quantity > 1) {
-      // Decrease quantity and update total
-      item.quantity -= 1;
-      item.total = Number(item.quantity * item.product.price);
+    if (existingItemIndex > -1) {
+      cart[existingItemIndex].quantity -= 1;
+
+      if (cart[existingItemIndex].quantity <= 0) {
+        cart.splice(existingItemIndex, 1);
+      } else {
+        cart[existingItemIndex].total =
+          cart[existingItemIndex].quantity *
+          cart[existingItemIndex].product.price;
+      }
+
+      const cartToken = generateGuestCartToken(cart);
+      console.log("Updated Cart Token");
+
+      res.cookie("cartToken", cartToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
+      res.status(200).json({
+        success: true,
+        code: 200,
+        status: "success",
+        data: cart,
+      });
     } else {
-      // Remove the item from the cart
-      cart.items.splice(existingItemIndex, 1);
+      res.status(404).json({
+        success: false,
+        code: 404,
+        status: "error",
+        msg: "Product not found in cart",
+      });
     }
-
-    // Save the updated cart
-    await cart.save();
-  } else {
-    return res.status(404).json({
+  } catch (error) {
+    res.status(500).json({
       success: false,
-      code: 404,
+      code: 500,
       status: "error",
-      msg: "Item not found in cart",
+      msg: "Internal server error",
     });
   }
-
-  res.status(200).json({
-    success: true,
-    code: 200,
-    status: "success",
-    data: cart,
-  });
 });
 exports.getCurrentUserOrder = (req, res, next) => {
   if (req.session["cart"] && req.session["cart"].length > 0) {

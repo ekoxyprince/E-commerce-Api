@@ -6,6 +6,8 @@ const { jwt_secret, jwt_expires } = require("../config");
 const crypto = require("crypto");
 const Mailgen = require("mailgen");
 const nodemailer = require("nodemailer");
+const Cart = require("../models/cart");
+
 exports.signup = async (req, res, next) => {
   try {
     const errors = validationResult(req);
@@ -232,6 +234,7 @@ exports.signin = async (req, res, next) => {
         },
       });
     }
+   
 
     const token = jwt.sign({ _id: user._id }, jwt_secret, {
       expiresIn: jwt_expires,

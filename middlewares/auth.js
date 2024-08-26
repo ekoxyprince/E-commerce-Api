@@ -1,4 +1,3 @@
-
 const passport = require("../config/passport");
 const jwt = require("jsonwebtoken");
 const { jwt_secret, jwt_expires } = require("../config");
@@ -17,6 +16,16 @@ exports.auth = (req, res, next) => {
           msg: "User is not authenticated",
         },
       });
+    }
+    req.user = user;
+    next();
+  })(req, res, next);
+};
+exports.authcart = (req, res, next) => {
+  passport.authenticate("jwt", (err, user, info) => {
+    if (!user) {
+      req.user = null; // Ensure req.user is set to null if not authenticated
+      return next(); // Proceed to the next middleware or route handler
     }
     req.user = user;
     next();
