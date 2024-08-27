@@ -35,7 +35,7 @@ app.use(helmet());
 app.use(logger("dev"));
 app.use(cookieParser());
 
-app.use(cors({ origin: allowedOrigin, credentials: true }));
+app.use(cors({ origin: true, credentials: true }));
 app.use("/api/v1", rootRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/user", userRoutes);
