@@ -9,7 +9,7 @@ const adminRoutes = require("./routes/admin");
 const compression = require("compression");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
-const corsOption = require("./config/corsOptions")
+const corsOption = require("./config/corsOptions");
 const logger = require("morgan");
 const rateLimit = require("express-rate-limit");
 const cors = require("cors");
@@ -35,7 +35,14 @@ app.use(helmet());
 app.use(logger("dev"));
 app.use(cookieParser());
 
-app.use(cors({ origin: true, credentials: true }));
+const corsOptions = {
+  origin: "https://www.urbantrov.com.ng", // Allow requests from this origin
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE", // Allowed methods
+  credentials: true, // Allow cookies to be sent with the requests
+  allowedHeaders: "Content-Type,Authorization", // Allowed headers
+};
+
+app.use(cors(corsOptions));
 app.use((req, res, next) => {
   res.header("Cache-Control", "public, max-age=3600"); // Cache for 1 hour
   next();
