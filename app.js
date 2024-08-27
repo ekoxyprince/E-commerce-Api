@@ -40,7 +40,7 @@ const corsOptions = {
   credentials: true, // Allow cookies to be sent with the requests
   allowedHeaders: 'Content-Type,Authorization', // Allowed headers
 };
-app.use(cors(corsOptions))
+app.use(cors({ origin: true, credentials: true }));
 app.use("/api/v1", rootRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/user", userRoutes);
