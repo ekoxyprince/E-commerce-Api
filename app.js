@@ -35,7 +35,7 @@ app.use(helmet());
 app.use(logger("dev"));
 app.use(cookieParser());
 const corsOptions = {
-  origin: allowedOrigin // Allow requests from this origin
+  origin: allowedOrigin, // Allow requests from this origin
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Allowed methods
   credentials: true, // Allow cookies to be sent with the requests
   allowedHeaders: 'Content-Type,Authorization', // Allowed headers

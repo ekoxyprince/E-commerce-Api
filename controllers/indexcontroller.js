@@ -559,7 +559,6 @@ exports.deleteFromCart = tryCatch(async (req, res, next) => {
       }
 
       const cartToken = generateGuestCartToken(cart);
-      console.log("Updated Cart Token");
 
       res.cookie("cartToken", cartToken, {
         httpOnly: true,
