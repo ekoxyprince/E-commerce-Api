@@ -34,13 +34,8 @@ app.use(compression());
 app.use(helmet());
 app.use(logger("dev"));
 app.use(cookieParser());
-const corsOptions = {
-  origin: allowedOrigin, // Allow requests from this origin
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Allowed methods
-  credentials: true, // Allow cookies to be sent with the requests
-  allowedHeaders: 'Content-Type,Authorization', // Allowed headers
-};
-app.use(cors({ origin: true, credentials: true }));
+
+app.use(cors({ origin: allowedOrigin, credentials: true }));
 app.use("/api/v1", rootRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/user", userRoutes);
