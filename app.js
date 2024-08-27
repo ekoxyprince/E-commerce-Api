@@ -35,7 +35,11 @@ app.use(helmet());
 app.use(logger("dev"));
 app.use(cookieParser());
 
-app.use(cors(corsOption));
+app.use(cors({ origin: true, credentials: true }));
+app.use((req, res, next) => {
+  res.header("Cache-Control", "public, max-age=3600"); // Cache for 1 hour
+  next();
+});
 app.use("/api/v1", rootRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/user", userRoutes);
