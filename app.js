@@ -9,7 +9,7 @@ const adminRoutes = require("./routes/admin");
 const compression = require("compression");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
-
+const corsOption = require("./config/corsOptions")
 const logger = require("morgan");
 const rateLimit = require("express-rate-limit");
 const cors = require("cors");
@@ -35,7 +35,7 @@ app.use(helmet());
 app.use(logger("dev"));
 app.use(cookieParser());
 
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors(corsOption));
 app.use("/api/v1", rootRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/user", userRoutes);
