@@ -1,6 +1,11 @@
 const Category = require("../models/category");
 const Product = require("../models/product");
 const jwt = require("jsonwebtoken");
+const {
+  getCart,
+  addToCart,
+  deleteItemFromCart,
+} = require("../middlewares/cache");
 
 const mongoose = require("mongoose");
 const { jwt_secret } = require("../config");
@@ -458,20 +463,27 @@ exports.searchProduct = (req, res, next) => {
     });
 };
 
-const generateGuestCartToken = (cart) => {
-  return jwt.sign({ cart }, jwt_secret, { expiresIn: "7d" });
+exports.fetchCart = async (req, res) => {
+  try {
+    const cart = getCart();
+    res.status(200).json({
+      success: true,
+      status: "success",
+      code: 200,
+      data: cart,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      code: 500,
+      status: "error",
+      msg: "Failed to fetch cart",
+    });
+  }
 };
-exports.fetchCart = async (req, res, next) => {
-  const cart = req.cart || [];
 
-  res.status(200).json({
-    success: true,
-    status: "success",
-    code: 200,
-    data: cart,
-  });
-};
-exports.addTocart = tryCatch(async (req, res, next) => {
+// Add to Cart
+exports.addTocart = async (req, res) => {
   try {
     const { id } = req.body;
     const product = await Product.findOne({ productType: "product", _id: id });
@@ -484,22 +496,19 @@ exports.addTocart = tryCatch(async (req, res, next) => {
         msg: "Product not found",
       });
     }
-
-    let cart = req.cart || [];
-
-    const existingItemIndex = cart.findIndex(
+    const cart = getCart();
+    const existingItem = cart.find(
       (item) => item.product.id.toString() === id.toString()
     );
-
-    if (existingItemIndex > -1) {
-      // If the product exists in the cart, update the quantity and total price
-      cart[existingItemIndex].quantity += 1;
-      cart[existingItemIndex].total =
-        cart[existingItemIndex].quantity *
+    if (existingItem) {
+      existingItem.quantity += 1;
+      existingItem.total =
+        existingItem.quantity *
         (product.prices.actualPrice - product.prices.discount);
+      addToCart(existingItem);
     } else {
-      // If the product is new in the cart, add it with initial quantity and total price
       const cartItem = {
+        id: product._id,
         product: {
           productName: product.productName,
           imageUrl: product.images[0].url,
@@ -511,24 +520,16 @@ exports.addTocart = tryCatch(async (req, res, next) => {
         total: product.prices.actualPrice - product.prices.discount,
         shipping: product.prices.shippingFee || 0,
       };
-      cart.push(cartItem);
+      addToCart(cartItem);
     }
-
-    const cartToken = generateGuestCartToken(cart);
-    res.cookie("cartToken", cartToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
-    });
-
     res.status(200).json({
       success: true,
       code: 200,
       status: "success",
-      data: cart,
+      data: getCart(),
     });
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       success: false,
       code: 500,
@@ -536,42 +537,32 @@ exports.addTocart = tryCatch(async (req, res, next) => {
       msg: "Internal server error",
     });
   }
-});
-exports.deleteFromCart = tryCatch(async (req, res, next) => {
+};
+
+// Delete from Cart
+exports.deleteFromCart = async (req, res) => {
   try {
     const { id } = req.body;
-
-    let cart = req.cart || [];
-
-    const existingItemIndex = cart.findIndex(
+    const cart = getCart();
+    const existingItem = cart.find(
       (item) => item.product.id.toString() === id.toString()
     );
 
-    if (existingItemIndex > -1) {
-      cart[existingItemIndex].quantity -= 1;
+    if (existingItem) {
+      existingItem.quantity -= 1;
 
-      if (cart[existingItemIndex].quantity <= 0) {
-        cart.splice(existingItemIndex, 1);
+      if (existingItem.quantity <= 0) {
+        deleteItemFromCart(id);
       } else {
-        cart[existingItemIndex].total =
-          cart[existingItemIndex].quantity *
-          cart[existingItemIndex].product.price;
+        existingItem.total = existingItem.quantity * existingItem.product.price;
+        addToCart(existingItem);
       }
-
-      const cartToken = generateGuestCartToken(cart);
-
-      res.cookie("cartToken", cartToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      });
 
       res.status(200).json({
         success: true,
         code: 200,
         status: "success",
-        data: cart,
+        data: getCart(),
       });
     } else {
       res.status(404).json({
@@ -589,7 +580,8 @@ exports.deleteFromCart = tryCatch(async (req, res, next) => {
       msg: "Internal server error",
     });
   }
-});
+};
+
 exports.getCurrentUserOrder = (req, res, next) => {
   if (req.session["cart"] && req.session["cart"].length > 0) {
     res.status(200).json({

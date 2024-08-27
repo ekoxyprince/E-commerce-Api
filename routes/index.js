@@ -44,8 +44,6 @@ router
 router.route("/payment_details").get([auth], controller.getPayment);
 router.route("/product-filter").get(controller.filterProducts);
 
-router.use(decodeGuestCart);
-
 router.post("/cart", controller.addTocart);
 router.get("/cart", controller.fetchCart);
 router.delete("/cart", controller.deleteFromCart);
