@@ -39,7 +39,7 @@ const corsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = [
       "https://www.urbantrov.com.ng",
-      /\.urbantrov\.com\.ng$/, // This will allow all subdomains of urbantrov.com.ng
+      /\.urbantrov\.com\.ng$/, 
     ];
 
     if (allowedOrigins.some((pattern) => pattern.test(origin))) {

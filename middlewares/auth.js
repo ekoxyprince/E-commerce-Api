@@ -21,16 +21,7 @@ exports.auth = (req, res, next) => {
     next();
   })(req, res, next);
 };
-exports.authcart = (req, res, next) => {
-  passport.authenticate("jwt", (err, user, info) => {
-    if (!user) {
-      req.user = null; // Ensure req.user is set to null if not authenticated
-      return next(); // Proceed to the next middleware or route handler
-    }
-    req.user = user;
-    next();
-  })(req, res, next);
-};
+
 exports.googleOauth = (req, res, next) => {
   passport.authenticate("google", (err, user, info) => {
     if (err) {
