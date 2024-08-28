@@ -26,13 +26,15 @@ const paymentSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "Order",
     },
+    itemId: {
+      type: Schema.Types.ObjectId,
+      ref: "Order",
+    },
     commission: {
       type: Number,
-      required: true,
     },
     vendorAmount: {
       type: Number,
-      required: true,
     },
   },
   {

@@ -40,12 +40,17 @@ router
   .route("/payment")
   .get([auth], controller.createPayment)
   .post([auth], controller.startPayment);
+  
 router.route("/payment_details").get([auth], controller.getPayment);
 router.route("/product-filter").get(controller.filterProducts);
 
 router.post("/cart", controller.addTocart);
 router.get("/cart", controller.fetchCart);
 router.delete("/cart", controller.deleteFromCart);
+router.post("/plan", [auth, merchant],controller.createPlan);
+router.get("/subscription", [auth, merchant], controller.checkSubscription);
+
+
 
 module.exports = router;
 

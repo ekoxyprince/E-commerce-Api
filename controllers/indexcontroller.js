@@ -1,5 +1,7 @@
 const Category = require("../models/category");
 const Product = require("../models/product");
+const Plan = require("../models/plans");
+
 const jwt = require("jsonwebtoken");
 const {
   getCart,
@@ -605,15 +607,22 @@ exports.getCurrentUserOrder = (req, res, next) => {
   }
 };
 exports.startPayment = tryCatch(async (req, res, next) => {
-  const { id } = req.body;
-  const order = await Order.findById(id);
-  if (!order) {
+  const { id, type } = req.body;
+  let item;
+
+  if (type === "order") {
+    item = await Order.findById(id);
+  } else if (type === "plan") {
+    item = await Plan.findById(id);
+  }
+
+  if (!item) {
     return res.status(400).json({
       success: false,
       code: 400,
       status: "error",
       data: {
-        msg: "No order found!",
+        msg: "No item found!",
         value: id,
         path: "id",
         location: "body",
@@ -621,13 +630,13 @@ exports.startPayment = tryCatch(async (req, res, next) => {
     });
   }
 
-  const paymentdata = {
+  const paymentData = {
     email: req.user.email,
-    full_name: req.user.fullname || `User-${req.user._id}`,
-    amount: order.total,
-    orderId: id,
+    full_name: req.user.fullname,
+    amount: item.amount || item.total,
+    itemId: id,
   };
-  const response = await paymentInstance.startPayment(paymentdata);
+  const response = await paymentInstance.startPayment(paymentData);
   res.status(201).json({
     success: true,
     status: "Payment Started",
@@ -635,23 +644,50 @@ exports.startPayment = tryCatch(async (req, res, next) => {
     data: { response },
   });
 });
+
 exports.createPayment = tryCatch(async (req, res, next) => {
-  const response = await paymentInstance.createPayment(req.query);
-  const newStatus = response.status === "success" ? "completed" : "pending";
-  const order = await Order.findOne({ _id: response.orderId }).populate(
-    "items.product"
-  );
+  try {
+    const response = await paymentInstance.createPayment(req.query);
+    const newStatus = response.status === "success" ? "completed" : "pending";
+    let item;
+    if (req.query.type === "order") {
+      item = await Order.findOne({ _id: response.itemId }).populate(
+        "items.product"
+      );
+    } else if (req.query.type === "plan") {
+      item = await Plan.findOne({ _id: response.itemId });
+    }
+    if (item && req.query.type === "order") {
+      item.status = newStatus;
 
-  order.status = newStatus;
-  const newOrder = await order.save();
-  await sendLoginNotification(req.user, order);
+      const newItem = await item.save();
+      await sendLoginNotification(req.user, item);
 
-  res.status(201).json({
-    success: true,
-    status: "Payment Created",
-    status: 201,
-    data: { payment: response, order: newOrder },
-  });
+      res.status(201).json({
+        success: true,
+        status: "Payment Created",
+        data: { payment: response, item: newItem },
+      });
+    } else if (req.query.type === "plan") {
+      item.status = newStatus;
+
+      const newItem = await item.save();
+
+      res.status(201).json({
+        success: true,
+        status: "Payment Created",
+        data: { payment: response, item: newItem },
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        status: "Item Not Found",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    // next(error); // This will pass the error to your error-handling middleware
+  }
 });
 
 const sendLoginNotification = async (user, order) => {
@@ -764,3 +800,74 @@ exports.filterProducts = tryCatch(async (req, res, next) => {
     data: { product: data },
   });
 });
+exports.createPlan = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { billingPlan, amount } = req.body;
+
+    const newPlan = new Plan({
+      billingPlan,
+      userId,
+      amount,
+      status: "pending",
+    });
+
+    await newPlan.save();
+
+    return res.status(201).json({
+      message: "Plan created successfully.",
+      plan: newPlan,
+    });
+  } catch (error) {
+    console.error("Error creating plan:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error. Please try again later." });
+  }
+};
+exports.checkSubscription = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Find all plans associated with the user
+    const subscriptions = await Plan.find({ userId });
+
+    if (subscriptions.length === 0) {
+      // No subscriptions found
+      return res.status(404).json({
+        success: false,
+        message: "No subscriptions found for this user",
+      });
+    }
+
+    // Check if any plan is active
+    const activeSubscriptions = subscriptions.filter(
+      (plan) => plan.status === "completed"
+    );
+
+    if (activeSubscriptions.length > 0) {
+      return res.status(200).json({
+        success: true,
+        active: true,
+        billingPlans: activeSubscriptions.map((plan) => ({
+          billingPlan: plan.billingPlan,
+          amount: plan.amount,
+          expiresAt: plan.expiresAt,
+        })),
+      });
+    } else {
+      return res.status(200).json({
+        success: true,
+        active: false,
+        billingPlans: [], // No active plans
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while checking subscriptions",
+    });
+  }
+};
+
+

@@ -13,13 +13,13 @@ module.exports = class PaymentService {
           "amount",
           "email",
           "full_name",
-          "orderId",
+          "itemId",
         ]);
         const commission = formData.amount * commissionRate;
         const vendorAmount = formData.amount - commission;
         formData.metadata = {
           full_name: formData.full_name,
-          orderId: formData.orderId,
+          itemId: formData.itemId,
           commission: commission,
           vendorAmount: vendorAmount,
         };
@@ -42,7 +42,7 @@ module.exports = class PaymentService {
         const response = await verifyPayment(ref);
         const { reference, amount, status } = response.data.data;
         const { email } = response.data.data.customer;
-        const { full_name, orderId, commission, vendorAmount } =
+        const { full_name, itemId, commission, vendorAmount } =
           response.data.data.metadata;
         const newPayment = {
           reference,
@@ -50,7 +50,7 @@ module.exports = class PaymentService {
           email,
           full_name,
           status,
-          orderId,
+          itemId,
           commission,
           vendorAmount,
         };
