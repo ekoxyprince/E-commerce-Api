@@ -3,11 +3,10 @@ const bcrypt = require("bcryptjs");
 const { validationResult } = require("express-validator");
 const Order = require("../models/order");
 const Product = require("../models/product");
-const Cart = require("../models/cart");
-
+const { getCart } = require("../middlewares/cache");
 exports.checkOut = async (req, res, next) => {
   try {
-    const cart = req.cart;
+    const cart = getCart();
 
     if (!cart || cart.length === 0) {
       return res.status(400).json({
@@ -61,11 +60,11 @@ exports.checkOut = async (req, res, next) => {
     });
 
     // Clear the user's cart after order creation
-  res.clearCookie("cartToken", {
-    httpOnly: true,
-    sameSite: "None",
-    secure: true,
-  });
+    res.clearCookie("cartToken", {
+      httpOnly: true,
+      sameSite: "None",
+      secure: true,
+    });
 
     res.status(201).json({
       success: true,

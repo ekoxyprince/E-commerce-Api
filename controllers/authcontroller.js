@@ -6,7 +6,6 @@ const { jwt_secret, jwt_expires } = require("../config");
 const crypto = require("crypto");
 const Mailgen = require("mailgen");
 const nodemailer = require("nodemailer");
-const Cart = require("../models/cart");
 
 exports.signup = async (req, res, next) => {
   try {
