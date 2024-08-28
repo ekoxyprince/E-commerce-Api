@@ -36,17 +36,26 @@ app.use(logger("dev"));
 app.use(cookieParser());
 
 const corsOptions = {
-  origin: "https://www.urbantrov.com.ng", // Allow requests from this origin
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE", // Allowed methods
-  credentials: true, // Allow cookies to be sent with the requests
-  allowedHeaders: "Content-Type,Authorization", // Allowed headers
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      "https://www.urbantrov.com.ng",
+      /\.urbantrov\.com\.ng$/, // This will allow all subdomains of urbantrov.com.ng
+    ];
+
+    if (allowedOrigins.some((pattern) => pattern.test(origin))) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  credentials: true,
+  allowedHeaders: "Content-Type,Authorization",
 };
 
+
 app.use(cors(corsOptions));
-app.use((req, res, next) => {
-  res.header("Cache-Control", "public, max-age=3600"); // Cache for 1 hour
-  next();
-});
+
 app.use("/api/v1", rootRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/user", userRoutes);
