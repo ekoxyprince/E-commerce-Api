@@ -1,4 +1,4 @@
-const NodeCache = require("node-cache");
+const NodeCache = require("node-cache")
 const cartCache = new NodeCache({ stdTTL: 3600 }); // Cache with a TTL of 1 hour
 
 const getCart = () => {

@@ -35,26 +35,10 @@ app.use(helmet());
 app.use(logger("dev"));
 app.use(cookieParser());
 
-const corsOptions = {
-  origin: (origin, callback) => {
-    const allowedOrigins = [
-      "https://www.urbantrov.com.ng",
-      /\.urbantrov\.com\.ng$/, 
-    ];
-
-    if (allowedOrigins.some((pattern) => pattern.test(origin))) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  credentials: true,
-  allowedHeaders: "Content-Type,Authorization",
-};
 
 
-app.use(cors(corsOptions));
+
+app.use(cors({ origin: true, credentials: true }));
 
 app.use("/api/v1", rootRoutes);
 app.use("/api/v1/auth", authRoutes);
