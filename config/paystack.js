@@ -1,11 +1,11 @@
-const {paystack_key} = require('../config')
+const { paystack_key_orders } = require("../config");
 
 const paystack = (request)=>{
   const initializePayment = (body)=>{
     const options = {
         url:'https://api.paystack.co/transaction/initialize',
         headers:{
-            'Authorization':paystack_key,
+            'Authorization':paystack_key_orders,
             'content-type':'application/json',
             'cache-control':'no-cache'
         },body
@@ -16,7 +16,7 @@ const paystack = (request)=>{
     const options= {
         url:`https://api.paystack.co/transaction/verify/`+encodeURIComponent(ref),
         headers:{
-            authorization:paystack_key,
+            authorization:paystack_key_orders,
             'content-type':'application/json',
             'cache-control':'no-cache'
         }

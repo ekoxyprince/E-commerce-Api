@@ -40,7 +40,10 @@ router
   .route("/payment")
   .get([auth], controller.createPayment)
   .post([auth], controller.startPayment);
-  
+  router
+    .route("/planpayment")
+    .get([auth], controller.createPlanPayment)
+    .post([auth], controller.startPlanPayment);
 router.route("/payment_details").get([auth], controller.getPayment);
 router.route("/product-filter").get(controller.filterProducts);
 

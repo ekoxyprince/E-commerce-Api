@@ -26,7 +26,7 @@ const paymentSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "Order",
     },
-    itemId: {
+    planId: {
       type: Schema.Types.ObjectId,
       ref: "Order",
     },

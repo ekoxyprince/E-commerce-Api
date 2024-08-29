@@ -10,11 +10,13 @@ const {
 } = require("../middlewares/cache");
 
 const mongoose = require("mongoose");
-const { jwt_secret } = require("../config");
 
 const { server } = require("../config");
 const fs = require("fs");
 const tryCatch = require("../utilities/catchasync");
+const PlanPaymentService = require("../services/planPayment");
+const PlanPaymentInstance = new PlanPaymentService();
+
 const PaymentService = require("../services/payment");
 const paymentInstance = new PaymentService();
 const { validationResult } = require("express-validator");
@@ -607,22 +609,15 @@ exports.getCurrentUserOrder = (req, res, next) => {
   }
 };
 exports.startPayment = tryCatch(async (req, res, next) => {
-  const { id, type } = req.body;
-  let item;
-
-  if (type === "order") {
-    item = await Order.findById(id);
-  } else if (type === "plan") {
-    item = await Plan.findById(id);
-  }
-
-  if (!item) {
+  const { id } = req.body;
+  const order = await Order.findById(id);
+  if (!order) {
     return res.status(400).json({
       success: false,
       code: 400,
       status: "error",
       data: {
-        msg: "No item found!",
+        msg: "No order found!",
         value: id,
         path: "id",
         location: "body",
@@ -630,13 +625,45 @@ exports.startPayment = tryCatch(async (req, res, next) => {
     });
   }
 
-  const paymentData = {
+  const paymentdata = {
     email: req.user.email,
-    full_name: req.user.fullname,
-    amount: item.amount || item.total,
-    itemId: id,
+    full_name: req.user.fullname || `User-${req.user._id}`,
+    amount: order.total,
+    orderId: id,
   };
-  const response = await paymentInstance.startPayment(paymentData);
+  const response = await paymentInstance.startPayment(paymentdata);
+  res.status(201).json({
+    success: true,
+    status: "Payment Started",
+    status: 201,
+    data: { response },
+  });
+});
+
+exports.startPlanPayment = tryCatch(async (req, res, next) => {
+  const { id } = req.body;
+  const plan = await Plan.findById(id);
+  if (!plan) {
+    return res.status(400).json({
+      success: false,
+      code: 400,
+      status: "error",
+      data: {
+        msg: "No order found!",
+        value: id,
+        path: "id",
+        location: "body",
+      },
+    });
+  }
+
+  const paymentdata = {
+    email: req.user.email,
+    full_name: req.user.fullname || `User-${req.user._id}`,
+    amount: plan.amount,
+    planId: id,
+  };
+  const response = await PlanPaymentInstance.startPayment(paymentdata);
   res.status(201).json({
     success: true,
     status: "Payment Started",
@@ -646,48 +673,37 @@ exports.startPayment = tryCatch(async (req, res, next) => {
 });
 
 exports.createPayment = tryCatch(async (req, res, next) => {
-  try {
-    const response = await paymentInstance.createPayment(req.query);
-    const newStatus = response.status === "success" ? "completed" : "pending";
-    let item;
-    if (req.query.type === "order") {
-      item = await Order.findOne({ _id: response.itemId }).populate(
-        "items.product"
-      );
-    } else if (req.query.type === "plan") {
-      item = await Plan.findOne({ _id: response.itemId });
-    }
-    if (item && req.query.type === "order") {
-      item.status = newStatus;
+  const response = await paymentInstance.createPayment(req.query);
+  const newStatus = response.status === "success" ? "completed" : "pending";
+  const order = await Order.findOne({ _id: response.orderId }).populate(
+    "items.product"
+  );
 
-      const newItem = await item.save();
-      await sendLoginNotification(req.user, item);
+  order.status = newStatus;
+  const newOrder = await order.save();
+  await sendLoginNotification(req.user, order);
 
-      res.status(201).json({
-        success: true,
-        status: "Payment Created",
-        data: { payment: response, item: newItem },
-      });
-    } else if (req.query.type === "plan") {
-      item.status = newStatus;
+  res.status(201).json({
+    success: true,
+    status: "Payment Created",
+    status: 201,
+    data: { payment: response, order: newOrder },
+  });
+});
 
-      const newItem = await item.save();
+exports.createPlanPayment = tryCatch(async (req, res, next) => {
+  const response = await PlanPaymentInstance.createPayment(req.query);
+  const newStatus = response.status === "success" ? "completed" : "pending";
+  const plan = await Plan.findOne({ _id: response.planId });
+  plan.status = newStatus;
+  const newPlan = await plan.save();
 
-      res.status(201).json({
-        success: true,
-        status: "Payment Created",
-        data: { payment: response, item: newItem },
-      });
-    } else {
-      res.status(400).json({
-        success: false,
-        status: "Item Not Found",
-      });
-    }
-  } catch (error) {
-    console.log(error);
-    // next(error); // This will pass the error to your error-handling middleware
-  }
+  res.status(201).json({
+    success: true,
+    status: "Payment Created",
+    status: 201,
+    data: { payment: response, plan: newPlan },
+  });
 });
 
 const sendLoginNotification = async (user, order) => {
@@ -869,5 +885,3 @@ exports.checkSubscription = async (req, res) => {
     });
   }
 };
-
-

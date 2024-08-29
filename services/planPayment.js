@@ -1,9 +1,9 @@
 const axios = require("axios");
 const Payment = require("../models/payments");
 const _ = require("lodash");
-const { initializePayment, verifyPayment } =
-  require("../config/paystack")(axios);
-const commissionRate = 0.1; // 10% commission rate
+const { initializePayment, verifyPayment } = require("../config/planpaystack")(
+  axios
+);
 
 module.exports = class PaymentService {
   startPayment(data) {
@@ -13,15 +13,12 @@ module.exports = class PaymentService {
           "amount",
           "email",
           "full_name",
-          "orderId",
+          "planId",
         ]);
-        const commission = formData.amount * commissionRate;
-        const vendorAmount = formData.amount - commission;
+
         formData.metadata = {
           full_name: formData.full_name,
-          orderId: formData.orderId,
-          commission: commission,
-          vendorAmount: vendorAmount,
+          planId: formData.planId,
         };
         formData.amount *= 100;
         const response = await initializePayment(formData);
@@ -42,17 +39,14 @@ module.exports = class PaymentService {
         const response = await verifyPayment(ref);
         const { reference, amount, status } = response.data.data;
         const { email } = response.data.data.customer;
-        const { full_name, orderId, commission, vendorAmount } =
-          response.data.data.metadata;
+        const { full_name, planId } = response.data.data.metadata;
         const newPayment = {
           reference,
           amount,
           email,
           full_name,
           status,
-          orderId,
-          commission,
-          vendorAmount,
+          planId,
         };
         const existingPayment = await Payment.findOne({ reference: reference });
         let payment;
