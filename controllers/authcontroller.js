@@ -37,19 +37,6 @@ exports.signup = async (req, res, next) => {
   }
 };
 
-exports.resendVerificationemail = async (req, res) => {
-  try {
-    const { email } = req.body;
-    const user = await User.findOne({ email });
-    await sendVerification(user);
-    return res.status(200).json({
-      message: "success",
-    });
-  } catch (error) {
-    return res.status(404).json({ message: "failed" });
-  }
-};
-
 const sendVerification = async (user) => {
   let MailGenerator = new Mailgen({
     theme: "default",
@@ -104,12 +91,25 @@ const sendVerification = async (user) => {
   });
 
   try {
-    await transporter.sendMail(message);
+    const info = await transporter.sendMail(message);
+    console.log("Email sent successfully:", info.response);
+    return true;
   } catch (err) {
     console.error("Error sending email:", err);
   }
 };
-
+exports.resendVerificationemail = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    await sendVerification(user);
+    return res.status(200).json({
+      message: "success",
+    });
+  } catch (error) {
+    return res.status(404).json({ message: "failed" });
+  }
+};
 exports.verify = async (req, res) => {
   try {
     const id = req.params.id;
@@ -233,7 +233,6 @@ exports.signin = async (req, res, next) => {
         },
       });
     }
-   
 
     const token = jwt.sign({ _id: user._id }, jwt_secret, {
       expiresIn: jwt_expires,
