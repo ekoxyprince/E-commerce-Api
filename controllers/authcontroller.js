@@ -375,7 +375,9 @@ exports.resetPassword = (req, res, next) => {
       data: errors.array()[0],
     });
   }
+
   const { resetToken, password } = req.body;
+
   User.findOne({
     resetToken: resetToken,
     resetTokenExpires: { $gt: Date.now() },
@@ -395,6 +397,7 @@ exports.resetPassword = (req, res, next) => {
           },
         });
       }
+
       return bcrypt
         .hash(password, 12)
         .then((hashedPassword) => {
@@ -403,20 +406,22 @@ exports.resetPassword = (req, res, next) => {
           user.resetTokenExpires = undefined;
           return user.save();
         })
-        .then((saved) => {
-          //Email function call should be here
-          res.status(200).json({
+        .then((savedUser) => {
+          // Email function call can be placed here
+
+          return res.status(200).json({
             success: true,
             code: 200,
             status: "success",
-            data: { ...saved["_doc"], msg: "Password reset was successful" },
+            data: { msg: "Password reset was successful" },
           });
         });
     })
-    .then((err) => {
-      next(err);
+    .catch((err) => {
+      next(err); // Handle any errors that occur
     });
 };
+
 exports.addWaitlist = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
