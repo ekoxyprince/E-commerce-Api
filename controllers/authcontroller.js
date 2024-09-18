@@ -335,7 +335,7 @@ exports.forgotPassword = async (req, res, next) => {
             link:
               user.role === "user"
                 ? `https://www.urbantrov.com.ng/resetpassword/${resetToken}`
-                : `https://www.merchant.urbantrov.com.ng/resetpassword/${resetToken}`,
+                : `https://www.merchant.urbantrov.com.ng/Auth/resetpassword/${resetToken}`,
           },
         },
         signature: "Sincerely",
