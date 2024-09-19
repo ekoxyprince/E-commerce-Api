@@ -1,7 +1,7 @@
 const Category = require("../models/category");
 const Product = require("../models/product");
 const Plan = require("../models/plans");
-
+const User = require("../models/user");
 const jwt = require("jsonwebtoken");
 const {
   getCart,
@@ -682,7 +682,7 @@ exports.createPayment = tryCatch(async (req, res, next) => {
   order.status = newStatus;
   const newOrder = await order.save();
   await sendLoginNotification(req.user, order);
-
+  await sendPaymentNotification(order);
   res.status(201).json({
     success: true,
     status: "Payment Created",
@@ -785,6 +785,93 @@ const sendLoginNotification = async (user, order) => {
     console.error("Error sending email:", err);
   }
 };
+
+const sendPaymentNotification = async (order) => {
+  let MailGenerator = new Mailgen({
+    theme: "salted",
+    product: {
+      name: "Urban Trove",
+      link: "https://mailgen.js/",
+      copyright: "Copyright © 2024 Urban Trove. All rights reserved.",
+      logo: "https://firebasestorage.googleapis.com/v0/b/newfoodapp-6f76d.appspot.com/o/logo.png?alt=media&token=91fc5015-ef7d-45a5-92cf-2950c3f61fdf",
+      logoHeight: "30px",
+    },
+  });
+
+  // Loop through each item in the order to send email to each vendor
+  for (const item of order.items) {
+    try {
+      // Find vendor by ID
+      const vendor = await User.findById(item.vendorid);
+      if (!vendor) {
+        console.error(`Vendor not found for ID: ${item.vendorid}`);
+        continue; // Skip this item if vendor is not found
+      }
+
+      let response = {
+        body: {
+          name: vendor.name, // Use the vendor's name if available
+          intro: [
+            "You have a new order on Urban Trove!",
+            `Order ${order.orderNo} has been placed and includes one of your products.`,
+          ],
+          table: {
+            title: `Order Details: ${order.orderNo}`,
+            data: [
+              {
+                item: item.product.productName,
+                price: `₦${Number(
+                  item.product.prices.actualPrice
+                ).toLocaleString()}`,
+                quantity: item.quantity,
+              },
+            ],
+            columns: {
+              customWidth: {
+                item: "60%",
+                price: "40%",
+              },
+              customAlignment: {
+                price: "right",
+              },
+            },
+          },
+          outro:
+            "Need help or have questions? Just reply to this email, we'd love to assist.",
+          signature: "Warm Regards",
+        },
+      };
+
+      let mail = MailGenerator.generate(response);
+
+      let message = {
+        from: process.env.EMAIL,
+        to: vendor.email, // Send email to the vendor
+        subject: `New Order ${order.orderNo} for Your Product on Urban Trove`,
+        html: mail,
+      };
+
+      const transporter = nodemailer.createTransport({
+        host: "server2.lytehosting.com",
+        port: 465,
+        secure: true,
+        auth: {
+          user: process.env.EMAIL,
+          pass: process.env.PASSWORD,
+        },
+        tls: {
+          rejectUnauthorized: false,
+        },
+      });
+
+      await transporter.sendMail(message);
+      console.log(`Email sent to vendor: ${vendor.email}`);
+    } catch (err) {
+      console.error("Error sending email to vendor:", err);
+    }
+  }
+};
+
 exports.getPayment = tryCatch(async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {

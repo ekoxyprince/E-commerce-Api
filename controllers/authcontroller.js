@@ -195,6 +195,7 @@ exports.signin = async (req, res, next) => {
     }
 
     const doMatch = await bcrypt.compare(password, user.password);
+    console.log(user);
     if (!doMatch) {
       return res.status(401).json({
         success: false,
