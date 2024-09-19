@@ -52,7 +52,6 @@ const productSchema = new Schema({
     },
     discount: {
       type: String,
-      required: true,
     },
     shippingFee: {
       type: String,
