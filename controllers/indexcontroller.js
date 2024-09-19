@@ -508,7 +508,7 @@ exports.addTocart = async (req, res) => {
       existingItem.quantity += 1;
       existingItem.total =
         existingItem.quantity *
-        (product.prices.actualPrice - product.prices.discount);
+        (product.prices.actualPrice - product.prices.discount || 0);
       addToCart(existingItem);
     } else {
       const cartItem = {
