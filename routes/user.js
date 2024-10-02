@@ -20,5 +20,6 @@ router
 router.route("/orders").get([auth, user], controller.getUserOrders);
 router.route("/order/:id").get([auth, user], controller.getSingleOrder);
 router.route("/products").get([auth, user], controller.fetchUserProducts);
+router.route("/bankdetails").patch([auth], controller.updateBankDetails);
 
 module.exports = router;

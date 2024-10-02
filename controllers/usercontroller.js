@@ -3,6 +3,8 @@ const bcrypt = require("bcryptjs");
 const { validationResult } = require("express-validator");
 const Order = require("../models/order");
 const Product = require("../models/product");
+const User = require("../models/user");
+
 const { getCart } = require("../middlewares/cache");
 exports.checkOut = async (req, res, next) => {
   try {
@@ -197,4 +199,26 @@ exports.fetchUserProducts = (req, res, next) => {
     .catch((error) => next(error));
 };
 
+exports.updateBankDetails = async (req, res) => {
+  const { accountNo, accountName, bankName, fullname } = req.body;
 
+  const updatedUser = await User.findByIdAndUpdate(
+    req.user.id, // Assuming user ID is available in req.user.id
+    {
+      $set: {
+        fullname, // Update the fullname
+        bankDetails: { accountNo, accountName, bankName },
+      },
+    },
+    { new: true, useFindAndModify: false }
+  );
+
+  if (!updatedUser) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  res.status(200).json({
+    message: "Bank details updated successfully",
+    updatedUser,
+  });
+};

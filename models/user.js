@@ -35,12 +35,24 @@ const userSchema = new Schema({
     type: Boolean,
     default: false,
   },
+  bankDetails: {
+    accountNo: {
+      type: String, // Use String to handle possible leading zeros
+      required: true,
+    },
+    accountName: {
+      type: String,
+      required: true,
+    },
+    bankName: {
+      type: String,
+      required: true,
+    },
+  },
   isActive: {
     type: Boolean,
     default: true,
   },
 });
-
-module.exports = model("User", userSchema);
 
 module.exports = model("User", userSchema);
