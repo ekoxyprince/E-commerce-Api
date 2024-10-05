@@ -724,6 +724,7 @@ const sendLoginNotification = async (user, order) => {
         "Thank you for shopping on Urban Trove!",
         `Your order ${order.orderNo} has been confirmed successfully.`,
         "It will be packed and shipped as soon as possible. You will receive a notification from us once the item(s) are ready for delivery.",
+        "your order has been placed. Tracking of this order is unavailable as we are not responsible for delivery. Once order has been received you are required to click on the 'delivered' button in your profile"
       ],
       table: [
         {
@@ -814,6 +815,8 @@ const sendPaymentNotification = async (order) => {
           intro: [
             "You have a new order on Urban Trove!",
             `Order ${order.orderNo} has been placed and includes one of your products.`,
+            "Please note: You have 3 days to send out this delivery, otherwise the order will be cancelled.",
+            "Contact the customer as soon as possible for further details.",
           ],
           table: {
             title: `Order Details: ${order.orderNo}`,
