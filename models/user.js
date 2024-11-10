@@ -37,16 +37,13 @@ const userSchema = new Schema({
   },
   bankDetails: {
     accountNo: {
-      type: String, // Use String to handle possible leading zeros
-      required: true,
+      type: String, 
     },
     accountName: {
       type: String,
-      required: true,
     },
     bankName: {
       type: String,
-      required: true,
     },
   },
   isActive: {

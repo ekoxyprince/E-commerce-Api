@@ -25,6 +25,7 @@ exports.signup = async (req, res, next) => {
       password: hashedPassword,
       role,
     });
+
     await sendVerification(user);
 
     res.status(200).json({
@@ -33,6 +34,7 @@ exports.signup = async (req, res, next) => {
       status: "success",
     });
   } catch (error) {
+    console.log(error);
     next(error);
   }
 };
